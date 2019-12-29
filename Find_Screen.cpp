@@ -507,8 +507,8 @@ static void drawSquares(Mat& image, const vector<vector<Point> >& squares, strin
                 string filepath = filename.substr(0, a + 1); 
                 imwrite(filepath + newfilename, finalresult);
                 //这里可以直接处理提取出来的文件
-                //FindPoints(finalresult);
-				FindLines(finalresult);
+                FindPoints(finalresult);
+				//FindLines(finalresult);
 
             }
         }
@@ -600,8 +600,10 @@ int main(int argc, char** argv)
     namedWindow("result", 0);
     /*   static const char* names[] = { "pic1.png", "pic2.png", "pic3.png",
            "pic4.png", "pic5.png", "pic6.png", 0 };"22.jpg",  */
-    char* names[] = {"new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
-         "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
+    //char* names[] = {"new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
+    //     "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
+	char* names[] = {"new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
+	     "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
 
     if (argc > 1)
     {
