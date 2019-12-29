@@ -221,8 +221,7 @@ void FindLines(Mat& image)
 		{
 			break;
 		}
-		Rect rect(beginPOS_X + m * 256, beginPOS_Y + m * 256, 256, 256);
-		//Rect rect(250, 250, 256, 256);
+		Rect rect(beginPOS_X + m * 256, beginPOS_Y + m * 256, 256, 256); 
 		Mat image_roi = image(rect);
 
 		if (bDebug)
@@ -330,17 +329,27 @@ void FindLines(Mat& image)
 }
 void FindPoints(Mat& image)
 {
-	for (int m = 0; m < 1; m++)
+	double image_width = image.cols;
+	double image_height = image.rows;
+	int findtimes = 0;
+	int MAXCHECKTIME = 3;
+	for (int m = 0; m < MAXCHECKTIME; m++)
 	{
-		Rect rect(50 + m * 256, 50 + m * 256, 256, 256);
-		//Rect rect(250, 250, 256, 256);
+		int beginPOS_X = 200 + m * 256;
+		int beginPOS_Y = 200 + m * 256;
+		if (beginPOS_X + m * 256 + 256 >= image_width || beginPOS_Y + m * 256 + 256 >= image_height)
+		{
+			break;
+		}
+		Rect rect(beginPOS_X + m * 256, beginPOS_Y + m * 256, 256, 256);
 		Mat image_roi = image(rect);
 
-		//ColorSalt(image_roi, 20);
-
-		//namedWindow("image_roi", 0);
-		//imshow("image_roi", image_roi);
-		//namedWindow("myimage", 0);
+		if (bDebug)
+		{
+			namedWindow("image_roi", 0);
+			imshow("image_roi", image_roi);
+			namedWindow("myimage", 0);
+		}
 		Mat gray, thresh, mat_canny, mat_dilate;
 		cvtColor(image_roi, gray, COLOR_BGR2GRAY);
 		threshold(gray, thresh, 110, 255, THRESH_BINARY);
