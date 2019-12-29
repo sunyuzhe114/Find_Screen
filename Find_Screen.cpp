@@ -12,7 +12,7 @@ using namespace cv;
 using namespace std;
 
 
-bool bDebug = false;
+bool bDebug = true;
 
 //int thresh = 50, N = 11;
 bool bUseCamer = false;
@@ -217,11 +217,11 @@ void FindLines(Mat& image)
 	{
 		int beginPOS_X = 200 + m * 256;
 		int beginPOS_Y = 200 + m * 256;
-		if (beginPOS_X + m * 256 + 256 >= image_width || beginPOS_Y + m * 256 + 256 >= image_height)
+		if (beginPOS_X  + 256 >= image_width || beginPOS_Y  + 256 >= image_height)
 		{
 			break;
 		}
-		Rect rect(beginPOS_X + m * 256, beginPOS_Y + m * 256, 256, 256); 
+		Rect rect(beginPOS_X, beginPOS_Y , 256, 256); 
 		Mat image_roi = image(rect);
 
 		if (bDebug)
@@ -329,57 +329,74 @@ void FindLines(Mat& image)
 }
 void FindPoints(Mat& image)
 {
+
 	double image_width = image.cols;
 	double image_height = image.rows;
 	int findtimes = 0;
-	int MAXCHECKTIME = 3;
+	int MAXCHECKTIME = 6;
 	for (int m = 0; m < MAXCHECKTIME; m++)
 	{
 		int beginPOS_X = 200 + m * 256;
 		int beginPOS_Y = 200 + m * 256;
-		if (beginPOS_X + m * 256 + 256 >= image_width || beginPOS_Y + m * 256 + 256 >= image_height)
+		if (beginPOS_X   + 256 >= image_width || beginPOS_Y   + 256 >= image_height)
 		{
 			break;
 		}
-		Rect rect(beginPOS_X + m * 256, beginPOS_Y + m * 256, 256, 256);
+		Rect rect(beginPOS_X , beginPOS_Y, 256, 256);
 		Mat image_roi = image(rect);
 
 		if (bDebug)
 		{
+			namedWindow("image", 0);
+			resizeWindow("image", 640, 960);
+			rectangle(image, rect, cv::Scalar(0, 0, 255), 1, 0, 0);
+			imwrite("d://sub_" + std::to_string(m) + ".jpg",image_roi );
+			imshow("image", image);
 			namedWindow("image_roi", 0);
 			imshow("image_roi", image_roi);
 			namedWindow("myimage", 0);
 		}
 		Mat gray, thresh, mat_canny, mat_dilate;
 		cvtColor(image_roi, gray, COLOR_BGR2GRAY);
-		threshold(gray, thresh, 110, 255, THRESH_BINARY);
+		//medianBlur(gray, gray, 3);
+		threshold(gray, thresh, 128, 255, THRESH_BINARY);
+		//threshold(gray, thresh, 140, 255, THRESH_BINARY);
 		//////////////////////////////////////
+
+				//////////////////////////////////////
 
 		//Mat dstImage;        //初始化自适应阈值参数
 		//const int maxVal = 255;
-		//int blockSize = 7;    //取值3、5、7....等
-		//int constValue = 10;
-		//int adaptiveMethod = 0;
-		//int thresholdType = 0;
-		/*
-			自适应阈值算法
-			0:ADAPTIVE_THRESH_MEAN_C
-			1:ADAPTIVE_THRESH_GAUSSIAN_C
-			--------------------------------------
-			阈值类型
-			0:THRESH_BINARY
-			1:THRESH_BINARY_INV
-		*/
-		//---------------【4】图像自适应阈值操作-------------------------
-		//adaptiveThreshold(gray, thresh, maxVal, adaptiveMethod, thresholdType, blockSize, constValue);
+		//int blockSize = 11;    //取值3、5、7....等
+		//int constValue = 10; 
+		///*
+		//	自适应阈值算法
+		//	0:ADAPTIVE_THRESH_MEAN_C
+		//	1:ADAPTIVE_THRESH_GAUSSIAN_C
+		//	--------------------------------------
+		//	阈值类型
+		//	0:THRESH_BINARY
+		//	1:THRESH_BINARY_INV
+		//*/
+		////cv2.adaptiveThreshold(img,           255, cv2.ADAPTIVE_THRESH_MEAN_C,	cv2.THRESH_BINARY, 63, 2)
+		//adaptiveThreshold(gray, thresh, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, blockSize, 3);
+		////imshow("thresh", thresh);
+		//Canny(thresh, mat_canny, 40, 200, 3);
 		//////////////////////////////////////
 		Canny(thresh, mat_canny, 55, 116, 3);
 		Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
 		dilate(mat_canny, mat_dilate, kernel, Point(-1, -1));
 		vector<vector<Point>> contours;
 		vector<Vec4i> hierarchy;
-		//namedWindow("dilate", 0);
-		//imshow("dilate", mat_dilate);
+		if (bDebug)
+		{
+			namedWindow("mat_canny", 0);
+			imshow("mat_canny", mat_canny);
+		namedWindow("dilate", 0);
+		imshow("dilate", mat_dilate);
+
+		}
+
 		findContours(mat_dilate, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point());
 
 		double  threshold_min_area = 4;
@@ -403,13 +420,28 @@ void FindPoints(Mat& image)
 		//cout << "total find " << contoursNum << endl;
 		if (contoursNum >= 4)
 		{
-			cout << currentfilename << " **************此图片存在企业水印 **************" << endl;
+			findtimes++;
+			cout << currentfilename << " **************区域存在企业水印 **************" << endl;
 		}
 		else
 		{
 			cout << currentfilename << " 未检出企业水印 " << "" << endl;
 		}
-		//imshow("myimage", image_roi);
+		if (bDebug)
+		{
+			cout << "检测第：" << m << endl;
+			imshow("myimage", image_roi);
+			waitKey(0);
+		}
+	}
+	if (findtimes >= MAXCHECKTIME - 1)
+	{
+		cout << currentfilename << " **************此图片存在企业水印 **************" << "内容为   zte20191228" << endl;
+	}
+	else
+	{
+
+		cout << currentfilename << " 未检出企业水印 " << "" << endl;
 	}
 }
 // the function draws all the squares in the image
@@ -611,7 +643,7 @@ int main(int argc, char** argv)
 		   "pic4.png", "pic5.png", "pic6.png", 0 };"22.jpg",  */
 		   //char* names[] = {"new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
 		   //     "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
-	char* names[] = { "new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
+	char* names[] = { "15.jpg","new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
 		 "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
 
 	if (argc > 1)
