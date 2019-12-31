@@ -14,18 +14,20 @@ def nothing(x):
 def detect_blob(im):
     params = cv2.SimpleBlobDetector_Params()
 
+    params.filterByColor = 1
+    params.blobColor=0
     # Change thresholds
-    params.thresholdStep = 1
+    params.thresholdStep = 10
     params.minThreshold = 119
     params.maxThreshold = 143
     # params.minThreshold = 50
     # params.maxThreshold = 200
     #点最小间距
-    params.minDistBetweenBlobs=64
+    params.minDistBetweenBlobs=30
     # Filter by Area.
     params.filterByArea = True
     #这个值要换算一下，针对 1080P的是3*3=9，如果图大于1080P要扩大面积
-    params.minArea = 9
+    params.minArea = 8
     params.maxArea = 81
 
     # Filter by CircularityThis just measures how close to a circle the blob is.
@@ -86,7 +88,9 @@ files = os.listdir(path)
 imgPaths=files
 image_inedex=0
 imgPath=imgPaths[image_inedex]
+
 img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
+
 
 img_width=img.shape[1]
 img_height=img.shape[0]
@@ -97,12 +101,13 @@ img_height=img.shape[0]
 
 
 
-beginX=256+250
-beginY=256+250
+
 windowSize=256
+beginX=windowSize+ 50
+beginY=windowSize+ 50
 #不切分
 img = img[ beginY - windowSize:beginY + windowSize,beginX - windowSize:beginX + windowSize ]
-
+#img = cv2.imread("test.png", cv2.IMREAD_GRAYSCALE)
 cv2.namedWindow("original_image", 0)
 imgori = cv2.imread(path + imgPath)
 
@@ -157,9 +162,9 @@ while(1):
 
     #if cur_flag == ord('c') and key != pre_flag :
     if cur_flag == ord('c') :
-        beginX=beginX+256
+        beginX=beginX+windowSize
         if beginX>=img_width:
-            beginX = img_width -256
+            beginX = img_width -windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img_width = img.shape[1]
         img_height = img.shape[0]
@@ -168,9 +173,9 @@ while(1):
     #if cur_flag == ord('x') and key != pre_flag :
     if cur_flag ==  ord('x'):
         #if  pre_flag == -1:
-        beginY=beginY+256
+        beginY=beginY+windowSize
         if beginY>=img_height:
-            beginY = img_height -256
+            beginY = img_height -windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img_width = img.shape[1]
         img_height = img.shape[0]
@@ -178,7 +183,7 @@ while(1):
 
 
     if cur_flag == ord('z') :
-        beginX=beginX-256
+        beginX=beginX-windowSize
         if(beginX- windowSize<0):
             beginX=windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
@@ -188,12 +193,14 @@ while(1):
 
 
     if cur_flag == ord('s') :
-        beginY=beginY-256
+        beginY=beginY-windowSize
         if(beginY- windowSize<0):
             beginY=  windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
 
+    if cur_flag == ord('v') :
+        cv2.imwrite("test.png",img)
 
     maxVal=cv2.getTrackbarPos('max','res')
     minVal=cv2.getTrackbarPos('min','res')
