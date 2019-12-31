@@ -643,7 +643,7 @@ int main(int argc, char** argv)
 		   "pic4.png", "pic5.png", "pic6.png", 0 };"22.jpg",  */
 		   //char* names[] = {"new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
 		   //     "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
-	char* names[] = { "15.jpg","new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
+	char* names[] = { "new4.jpg","15.jpg","new2.jpg", "new1.jpg","2.jpg","15.jpg",  "3.jpg",   "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",   "12.jpg", "13.jpg",
 		 "15.jpg", "16.jpg",   "17.jpg",  "20.jpg","new.jpg",   0 };
 
 	if (argc > 1)
