@@ -30,3 +30,11 @@ x64/Release/Find_Screen.vcxproj.FileListAbsolute.txt
 x64/Release/putText.obj
 x64/Release/vc142.pdb
 x64/Release/Find_Screen.tlog/unsuccessfulbuild
+pycode/.idea/deployment.xml
+pycode/.idea/inspectionProfiles/profiles_settings.xml
+pycode/.idea/misc.xml
+pycode/.idea/modules.xml
+pycode/.idea/pycode.iml
+pycode/.idea/vcs.xml
+pycode/.idea/workspace.xml
+pycode/result.csv

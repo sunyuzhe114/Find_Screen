@@ -230,7 +230,7 @@ while(1):
     cv2.imshow('res',img_result)
     cv2.imshow('THRESH_BINARY', thresh1)
     # cv2.imshow('THRESH_BINARY_INV', thresh2)
-    #cv2.imshow('THRESH_TRUNC', thresh3)
+    # cv2.imshow('THRESH_TRUNC', thresh3)
     # cv2.imshow('THRESH_TOZERO', thresh4)
     # cv2.imshow('THRESH_TOZERO_INV', thresh5)
     cv2.imshow('THRESH_OTSU', thresh_THRESH_OTSU)
