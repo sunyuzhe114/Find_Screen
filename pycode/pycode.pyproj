@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3e285829-1b21-4ab2-aa16-f8f964853cc1}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>threshold_demo.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>CondaEnv|CondaEnv|new3.6</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="new_2x2\new2x2.jpg" />
+    <Content Include="new_2x2\_big_new2x2.jpg" />
+    <Content Include="new_2x2\_new2x2.jpg" />
+    <Content Include="new_3x1\_me3x1.jpg" />
+    <Content Include="new_3x3\_me3x3.jpg" />
+    <Content Include="new_3x3\_new3x3.jpg" />
+    <Content Include="test.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="threshold_demo.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="new_2x2" />
+    <Folder Include="new_3x1" />
+    <Folder Include="new_3x3" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|new3.6" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
