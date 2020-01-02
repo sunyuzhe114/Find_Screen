@@ -4,6 +4,17 @@ import cv2
 import os
 from matplotlib import pyplot as plt
 
+#导入math包
+import math
+
+
+def distance(p1,p2):
+    x=p1[0]-p2[0]
+    y=p1[1]-p2[1]
+    #用math.sqrt（）求平方根
+    return   math.sqrt((x**2)+(y**2))
+#定义得到直线长度的函数
+
 
 
 
@@ -53,7 +64,7 @@ def detect_blob(im):
     # and for a line it is 0. To filter by inertia ratio, set filterByInertia = 1,
     # and set 0 ≤ minInertiaRatio ≤ 1 and maxInertiaRatio (≤ 1 ) appropriately.
     params.filterByInertia = True
-    params.minInertiaRatio = 0.4
+    params.minInertiaRatio = 0.1
     #params.maxInertiaRatio = 1
 
     # Create a detector with the parameters
@@ -79,7 +90,7 @@ def detect_blob(im):
 
     im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0, 0, 255),
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    return im_with_keypoints
+    return im_with_keypoints,keypoints
 
 
 
@@ -101,12 +112,13 @@ img_height=img.shape[0]
 
 
 
-
-windowSize=256
-beginX=windowSize+ 50
-beginY=windowSize+ 50
+half_windowSize =round(img_width/12)
+print("windows size =",half_windowSize*2)
+#half_windowSize=256
+beginX=half_windowSize
+beginY=half_windowSize
 #不切分
-img = img[ beginY - windowSize:beginY + windowSize,beginX - windowSize:beginX + windowSize ]
+img = img[ beginY - half_windowSize:beginY + half_windowSize,beginX - half_windowSize:beginX + half_windowSize ]
 #img = cv2.imread("test.png", cv2.IMREAD_GRAYSCALE)
 cv2.namedWindow("original_image", 0)
 imgori = cv2.imread(path + imgPath)
@@ -119,7 +131,7 @@ cv2.namedWindow('res',0)
 cv2.resizeWindow("res", 512, 674)
 #cv2.resizeWindow("MEAN_C_adaptive", 512, 512)
 cv2.resizeWindow("GAUSSIAN_C_adaptive", 512, 512)
-cv2.createTrackbar('area','res',3,64,nothing)
+cv2.createTrackbar('area','res',15,64,nothing)
 cv2.createTrackbar('min','res',128,255,nothing)
 cv2.createTrackbar('max','res',255,255,nothing)
 cur_flag = -1
@@ -157,47 +169,47 @@ while(1):
 
         img_width = img.shape[1]
         img_height = img.shape[0]
-        img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
+        img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
 
 
     #if cur_flag == ord('c') and key != pre_flag :
     if cur_flag == ord('c') :
-        beginX=beginX+windowSize
+        beginX=beginX+half_windowSize*2
         if beginX>=img_width:
-            beginX = img_width -windowSize
+            beginX = img_width -half_windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img_width = img.shape[1]
         img_height = img.shape[0]
-        img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
+        img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
 
     #if cur_flag == ord('x') and key != pre_flag :
     if cur_flag ==  ord('x'):
         #if  pre_flag == -1:
-        beginY=beginY+windowSize
+        beginY=beginY+half_windowSize*2
         if beginY>=img_height:
-            beginY = img_height -windowSize
+            beginY = img_height -half_windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img_width = img.shape[1]
         img_height = img.shape[0]
-        img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
+        img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
 
 
     if cur_flag == ord('z') :
-        beginX=beginX-windowSize
-        if(beginX- windowSize<0):
-            beginX=windowSize
+        beginX=beginX-half_windowSize*2
+        if(beginX- half_windowSize<0):
+            beginX=half_windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
         img_width = img.shape[1]
         img_height = img.shape[0]
-        img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
+        img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
 
 
     if cur_flag == ord('s') :
-        beginY=beginY-windowSize
-        if(beginY- windowSize<0):
-            beginY=  windowSize
+        beginY=beginY-half_windowSize*2
+        if(beginY- half_windowSize<0):
+            beginY=  half_windowSize
         img = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
-        img = img[beginY - windowSize:beginY + windowSize, beginX - windowSize:beginX + windowSize]
+        img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
 
     if cur_flag == ord('v') :
         cv2.imwrite("test.png",img)
@@ -228,12 +240,41 @@ while(1):
     GAUSSIAN_C_Blur = cv2.dilate(GAUSSIAN_C_Blur, kernel, iterations=1)
 
     # Setup SimpleBlobDetector parameters.
-    img_result=detect_blob(thresh_THRESH_OTSU)
+    img_result,keypoints=detect_blob(thresh_THRESH_OTSU)
     #img_result = detect_blob(GAUSSIAN_C_Blur)
     #print("save image ")
     #cv2.imwrite("result.png",img_result)
-    
 
+#         for(int i=1;i<6;i++)
+#             graphics.drawLine(i*180,0,i*180,1920);
+#         for(int i=1;i<11;i++)
+#             graphics.drawLine(0,i*180,1080,i*180);
+    crossPoints=[]
+    for i in range(1 , 5):
+        cv2.line(img_result,pt1=(round(i*half_windowSize*2/5),0),
+                 pt2=(round(i*half_windowSize*2/5),half_windowSize*2),color=(255,0,0))
+        cv2.line(img_result, pt1=( 0,round(i * half_windowSize * 2 / 5)),
+                 pt2=( half_windowSize * 2,round(i * half_windowSize * 2 / 5) ), color=(255, 0, 0))
+    for i in range(1,5):
+        for j in range(1,5):
+            crossPoints.append((round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)))
+
+            # cv2.circle(img_result, (round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)) ,
+            #               4,(0, 255, 0))
+
+    array = [[0, 0, 0, 0], [0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]]
+    #for pt in keypoints:
+    for i in range(len(keypoints)):
+        for j in range(len(crossPoints)):
+            # 获取两点之间直线的长度
+            l = distance(keypoints[i].pt, crossPoints[j])
+            if l< half_windowSize/4 :
+                row =int(j/4)
+                col =j%4
+                array[col][row]=1
+                cv2.circle(img_result, crossPoints[j], 4,(0, 255, 0),thickness=-1)
+
+    print(array)
     cv2.imshow('res',img_result)
     cv2.imshow('THRESH_BINARY', thresh1)
     # cv2.imshow('THRESH_BINARY_INV', thresh2)
@@ -243,9 +284,12 @@ while(1):
     cv2.imshow('THRESH_OTSU', thresh_THRESH_OTSU)
     cv2.imshow('GAUSSIAN_C_adaptive', GAUSSIAN_C_adaptive)
     cv2.imshow('GAUSSIAN_C_Blur', GAUSSIAN_C_Blur)
-    cv2.rectangle(ori_img_show, (beginX - windowSize, beginY - windowSize), (beginX + windowSize, beginY + windowSize),
+
+    cv2.rectangle(ori_img_show, (beginX - half_windowSize, beginY - half_windowSize), (beginX + half_windowSize, beginY + half_windowSize),
                   (0, 0, 255),
                   4)
+
     cv2.imshow("original_image", ori_img_show)
+
 cv2.destroyAllWindows()
 
