@@ -7,7 +7,15 @@ from matplotlib import pyplot as plt
 #导入math包
 import math
 
+def hammingDistance( x, y):
+    """
+    :type x: int
+    :type y: int
+    :rtype: int
+    """
+    return bin(x^y).count('1')
 
+print(hammingDistance(  0x87ff,0x273f))
 def distance(p1,p2):
     x=p1[0]-p2[0]
     y=p1[1]-p2[1]
@@ -15,6 +23,16 @@ def distance(p1,p2):
     return   math.sqrt((x**2)+(y**2))
 #定义得到直线长度的函数
 
+def toInt(content):
+    ORG_POINT_COUNT=4
+    value = 0
+    for i in range(ORG_POINT_COUNT-1,-1,-1):
+        for j in range(ORG_POINT_COUNT-1,-1,-1):
+            value = value << 1
+            #value += content[i][j] > 0 ? 1: 0;
+            if(content[i][j]>0):
+                value=value+1
+    return value
 
 
 
@@ -81,20 +99,64 @@ def detect_blob(im):
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
     # the size of the circle corresponds to the size of blob
 
-    f = open("result.csv", "w")
-    for p in keypoints:
-        info=str(round(p.pt[0]))+"\t"+str(round(p.pt[1]))
-        f.write(info+ '\n')
-        #print(round(p.pt[0])," ",round(p.pt[1]))
-    f.close()
+    # f = open("result.csv", "w")
+    # for p in keypoints:
+    #     info=str(round(p.pt[0]))+"\t"+str(round(p.pt[1]))
+    #     f.write(info+ '\n')
+    #     #print(round(p.pt[0])," ",round(p.pt[1]))
+    # f.close()
 
     im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0, 0, 255),
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+
+    crossPoints=[]
+
+    for i in range(1,5):
+        for j in range(1,5):
+            crossPoints.append((round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)))
+
+            # cv2.circle(img_result, (round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)) ,
+            #               4,(0, 255, 0))
+
+    array = [[0, 0, 0, 0], [0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]]
+    #for pt in keypoints:
+    for i in range(len(keypoints)):
+        for j in range(len(crossPoints)):
+            # 获取两点之间直线的长度
+            l = distance(keypoints[i].pt, crossPoints[j])
+            if l< half_windowSize/4 :
+                row =int(j/4)
+                col =j%4
+                array[col][row]=1
+                #cv2.circle(img_result, crossPoints[j], 4,(0, 255, 0),thickness=-1)
+
+
+    myresult =toInt(array)
+    print(array,hex(myresult))
+    #print(hex(myresult))
+    f = open("result.txt", "a")
+    #f.write(hex(myresult)+ '\n')
+    f.write(hex(myresult) + ',')
+    f.close()
     return im_with_keypoints,keypoints
 
+def generate_date(img):
+    if (os.path.exists('result.txt')):
+        os.remove('result.txt')
 
+    gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
 
+    for j in range (0,10):
+        for i in range(0,6):
+            block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
+                             beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
+            ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
+            #print(j,i,j*6+i)
+            detect_blob(thresh_THRESH_OTSU)
+# path = r"new_2x2/"
 path = r"new_3x3/"
+
 files = os.listdir(path)
 imgPaths=files
 image_inedex=0
@@ -123,7 +185,22 @@ img = img[ beginY - half_windowSize:beginY + half_windowSize,beginX - half_windo
 cv2.namedWindow("original_image", 0)
 imgori = cv2.imread(path + imgPath)
 
+my_image = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
 
+f = open('database.txt', 'r')
+fdatabases = f.readlines() # 只读取1行
+listdata=fdatabases[2].split(',')
+f = open('result.txt', 'r')
+fline = f.readline() # 只读取1行
+chekdata=fline.split(',')
+hndis=0
+
+hndis = 0
+for i in range(0,60):
+    hndis+= hammingDistance(int(listdata[i],16),int(chekdata[i],16))
+print("汉宁",hndis)
+
+#generate_date(my_image)
 
 #cv2.namedWindow('MEAN_C_adaptive',0)
 cv2.namedWindow('GAUSSIAN_C_adaptive',0)
@@ -135,6 +212,8 @@ cv2.createTrackbar('area','res',15,64,nothing)
 cv2.createTrackbar('min','res',128,255,nothing)
 cv2.createTrackbar('max','res',255,255,nothing)
 cur_flag = -1
+
+
 while(1):
     #gray_img = img.copy()# 不滤波
     #gray_img=cv2.medianBlur(img,3) # 均值滤波
@@ -245,10 +324,7 @@ while(1):
     #print("save image ")
     #cv2.imwrite("result.png",img_result)
 
-#         for(int i=1;i<6;i++)
-#             graphics.drawLine(i*180,0,i*180,1920);
-#         for(int i=1;i<11;i++)
-#             graphics.drawLine(0,i*180,1080,i*180);
+
     crossPoints=[]
     for i in range(1 , 5):
         cv2.line(img_result,pt1=(round(i*half_windowSize*2/5),0),
@@ -273,8 +349,10 @@ while(1):
                 col =j%4
                 array[col][row]=1
                 cv2.circle(img_result, crossPoints[j], 4,(0, 255, 0),thickness=-1)
-
-    print(array)
+#
+#     #print(array)
+#     myresult =toInt(array)
+#     print(myresult, "=>",hex(myresult))
     cv2.imshow('res',img_result)
     cv2.imshow('THRESH_BINARY', thresh1)
     # cv2.imshow('THRESH_BINARY_INV', thresh2)
@@ -285,7 +363,8 @@ while(1):
     cv2.imshow('GAUSSIAN_C_adaptive', GAUSSIAN_C_adaptive)
     cv2.imshow('GAUSSIAN_C_Blur', GAUSSIAN_C_Blur)
 
-    cv2.rectangle(ori_img_show, (beginX - half_windowSize, beginY - half_windowSize), (beginX + half_windowSize, beginY + half_windowSize),
+    cv2.rectangle(ori_img_show, (beginX - half_windowSize, beginY - half_windowSize),
+                  (beginX + half_windowSize, beginY + half_windowSize),
                   (0, 0, 255),
                   4)
 
