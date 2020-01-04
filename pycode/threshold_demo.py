@@ -133,7 +133,7 @@ def detect_blob(im):
 
 
     myresult =toInt(array)
-    print(array,hex(myresult))
+    #print(array,hex(myresult))
     #print(hex(myresult))
     f = open("result.txt", "a")
     #f.write(hex(myresult)+ '\n')
@@ -148,15 +148,20 @@ def generate_date(img):
     gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
 
     for j in range (0,10):
+        if(beginY + half_windowSize + j * half_windowSize * 2) >=img.shape[0]:
+            break;
+
+
         for i in range(0,6):
+
             block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
                              beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
             ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
             #print(j,i,j*6+i)
             detect_blob(thresh_THRESH_OTSU)
 # path = r"new_2x2/"
-path = r"new_3x3/"
-
+#path = r"new_3x3/"
+path = r"3keys/"
 files = os.listdir(path)
 imgPaths=files
 image_inedex=0
@@ -185,22 +190,39 @@ img = img[ beginY - half_windowSize:beginY + half_windowSize,beginX - half_windo
 cv2.namedWindow("original_image", 0)
 imgori = cv2.imread(path + imgPath)
 
-my_image = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
+for imgPath in imgPaths:
+    my_image = cv2.imread(path+imgPath, cv2.IMREAD_GRAYSCALE)
+    generate_date(my_image)
+    keyname=["love you","test6","syz123","hellowld","hleilw","323232y5","w302390","jer65343","23gw4d3s","cet2019"]
+    f = open('database.txt', 'r')
+    fdatabases = f.readlines() # 只读取1行
+    f.close()
 
-f = open('database.txt', 'r')
-fdatabases = f.readlines() # 只读取1行
-listdata=fdatabases[2].split(',')
-f = open('result.txt', 'r')
-fline = f.readline() # 只读取1行
-chekdata=fline.split(',')
-hndis=0
+    f = open('result.txt', 'r')
+    fline = f.readline() # 只读取1行
+    f.close()
+    chekdata=fline.split(',')
 
-hndis = 0
-for i in range(0,60):
-    hndis+= hammingDistance(int(listdata[i],16),int(chekdata[i],16))
-print("汉宁",hndis)
+    findbest=-1
+    minHanni=960
 
-#generate_date(my_image)
+    for j in range(len(fdatabases)):
+        hndis=0
+        listdata = fdatabases[j].split(',')
+        for i in range(0,60):
+            if(i>=len(chekdata) or chekdata[i]==''):
+                break
+            if(i >5 and i<54 and i%6!=0 and (i-5) %6!=0):#去除左上，左下，右上，右下的点
+                hndis+= hammingDistance(int(listdata[i],16),int(chekdata[i],16))
+        print(keyname[j]," 汉宁距离",hndis ,"正确率",'%.3f' %((960-hndis)/960))
+        if(hndis<minHanni):
+            minHanni=hndis
+            findbest=j
+    print(path+imgPath,"内容为：" ,keyname[findbest]," 汉宁距离",minHanni ,"正确率",'%.3f' %((960-minHanni)/960))
+
+
+
+
 
 #cv2.namedWindow('MEAN_C_adaptive',0)
 cv2.namedWindow('GAUSSIAN_C_adaptive',0)
