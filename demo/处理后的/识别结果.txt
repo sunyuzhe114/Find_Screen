@@ -1,0 +1,4 @@
+_hellowld.jpg 内容为： hellowld  汉宁距离 74 正确率 0.923
+_jer65343.jpg 内容为： cet2019  汉宁距离 192 正确率 0.800
+_test6.jpg 内容为： test6  汉宁距离 204 正确率 0.787
+_test6_.jpg 内容为： test6  汉宁距离 135 正确率 0.859
