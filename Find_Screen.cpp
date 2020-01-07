@@ -140,11 +140,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
 	}
 	// }
 }
-
-static void saveImage(Mat& image, Rect& rect, string filename)
-{
-	imwrite(filename, image);
-}
+ 
 
 vector<vector<Point2f>> divide_points_into_4_parts(const vector<Point2f>& line_nodes, int img_height, int img_width)
 {
