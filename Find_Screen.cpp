@@ -544,7 +544,7 @@ static void drawSquares(Mat& image, const vector<vector<Point> >& squares, strin
 				string filepath = filename.substr(0, a + 1);
 				imwrite(filepath + newfilename, finalresult);
 				//这里可以直接处理提取出来的文件
-				FindPoints(finalresult);
+				//FindPoints(finalresult);
 				//FindLines(finalresult);
 
 			}
