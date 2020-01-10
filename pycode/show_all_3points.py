@@ -187,9 +187,8 @@ for p in mid_point_offset_list:
 cv2.putText(output_image, "middle", (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
             0.7, (0, 0,0 ), 2)
 print('中继帧'+'=>'+str(hex(value)))
-# for i in range(1, 5):
-#     for j in range(1, 5):
-# crossPoints.append((round(i * half_windowSize * 2 / 5), round(j * half_windowSize * 2 / 5)))
+
+
 cv2.namedWindow("img", 0)
 cv2.resizeWindow("img", 12 * blocksize, 7 * blocksize)
 cv2.imshow("img", blank_image)
