@@ -175,11 +175,7 @@ def allowed_file(filename):
 
 def main(args):
     global checkpath,DISTANCE_LIMIT
-    # checkpath = r"new_2x2/"
-    # checkpath = r"new_3x3/"
-    checkpath = r"ori_img/"
-    #checkpath = r"new10/"
-    #checkpath = r"bugs/"
+
     files=[]
     if (args.image!=None):
         checkpath= args.image.rsplit('/', 1)[0]+"/"
@@ -187,6 +183,11 @@ def main(args):
 
     if (args.images_dir!= None):
         checkpath = args.images_dir
+        # checkpath = r"new_2x2/"
+        # checkpath = r"new_3x3/"
+        # checkpath = r"ori_img/"
+        #checkpath = r"new10/"
+        # checkpath = r"bugs/"
         files = os.listdir(checkpath)
 
     imgPaths = files
@@ -208,19 +209,23 @@ def main(args):
             continue
         total_num += 1
         my_image = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+        #这里将my_image从屏幕区中扣出，如果my_image是手机原图则不调用下面的话
         squares,my_image=find_screen.getFinalImage(my_image)
+
+        os.makedirs(checkpath+"tmp", exist_ok=True)
+        cv2.imwrite(checkpath+"tmp/_"+imgPath,my_image)
         chekdata=generate_date(my_image)
 
         findbest = -1
         minHanni = 960
-        total_good_block=0
+        total_good_blocks=0
         #统计一下检测的有效换数，并换算成点数*16
         for i in range(0, 60):
             if (i >= len(chekdata) or chekdata[i] == ''):
                 break
             if (chekdata[i] != 0):
-                total_good_block += 1
-        total_good_block *= 16
+                total_good_blocks += 1
+        total_good_points=total_good_blocks *  16
 
         results=[]
         for j in range(len(fdatabases)):
@@ -233,7 +238,8 @@ def main(args):
                 #if (i > 5 and i < 54 and i % 6 != 0 and (i - 5) % 6 != 0):  # 去除左上，左下，右上，右下的点
                     # if (i !=0 and i !=5 ):  # 去除左上，左下，右上，右下的点
                     # #hndis += hammingDistance(int(listdata[i], 16), int(chekdata[i], 16))
-                hndis += hammingDistance(int(listdata[i], 16), chekdata[i])
+                if( chekdata[i]!=0):
+                    hndis += hammingDistance(int(listdata[i], 16), chekdata[i])
             # print(keyname[j]," 汉宁距离",hndis ,"正确率",'%.3f' %((total_good_block*=16-hndis)/total_good_block*=16))
             results.append(hndis)
             if (hndis < minHanni):
@@ -245,14 +251,14 @@ def main(args):
 
         str_result={}
         for i in top_k:
-           str_result[keyname[i]] = '%.2f'%((total_good_block-results[i])/total_good_block*100)+"%"
+           str_result[keyname[i]] = '%.2f'%((total_good_points-results[i])/total_good_points*100)+"%"
 
         if imgPath.find(keyname[findbest]) >= 0:
             right_num += 1
-            print(imgPath, "内容为：", keyname[findbest], " 汉宁距离", minHanni, "正确率", '%.3f' % ((960 - minHanni) / 960),
+            print(imgPath, "内容为：", keyname[findbest], " 汉宁距离", minHanni, "正确率", '%.3f' % ((total_good_points - minHanni) / total_good_points),
                   "---正确")#,"可能结果",str_result)
         else:
-            print(imgPath, "内容为：", keyname[findbest], " 汉宁距离", minHanni, "正确率", '%.3f' % ((960 - minHanni) / 960),
+            print(imgPath, "内容为：", keyname[findbest], " 汉宁距离", minHanni, "正确率", '%.3f' % ((total_good_points - minHanni) / total_good_points),
                   "---错误","可能结果",str_result)
 
     print("总数", total_num, "正确数量", right_num, "正确率", '%.3f' % (right_num / total_num))

@@ -7,6 +7,7 @@ Click==7.0
 cycler==0.10.0
 Flask==1.0.3
 Flask-Cors==3.0.8
+future==0.18.2
 gast==0.3.2
 get==2019.4.13
 gevent==1.4.0
@@ -39,6 +40,7 @@ post==2019.4.13
 protobuf==3.9.1
 public==2019.4.13
 pycparser==2.19
+pycpd==1.0.5
 pyparsing==2.4.2
 pypinyin==0.35.4
 pytesseract==0.3.0
