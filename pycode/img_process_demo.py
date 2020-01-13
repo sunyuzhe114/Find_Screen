@@ -1,3 +1,4 @@
+#针对 3*3的点进行检测的示例
 import numpy as np
 import random
 import cv2
