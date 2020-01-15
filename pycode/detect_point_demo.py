@@ -8,6 +8,53 @@ import argparse
 import math
 import find_screen
 from datetime import datetime
+our_dict={0x181:'0',
+0x144:'1',
+0x142:'2',
+0x141:'3',
+0x121:'4',
+0x111:'5',
+0x10c:'6',
+0x10a:'7',
+0x109:'8',
+0x105:'9',
+0x103: 'a',
+0xc4: 'b',
+0xa1: 'c',
+0x8c: 'd',
+0x85: 'e',
+0x64: 'f',
+0x62: 'g',
+0x61: 'h',
+0x54: 'i',
+0x4c: 'j',
+0x46: 'k',
+0x45: 'l',
+0x182: 'm',
+0x150: 'n',
+0x128: 'o',
+0x118: 'p',
+0x114: 'q',
+0x112: 'r',
+0xc2: 's',
+0x94: 't',
+0x92: 'u',
+0x91: 'v',
+0x86: 'w',
+0x83: 'x',
+0x70: 'y',
+0x68: 'z',
+0x52:'A',
+0x51:'B',
+0x38:'C',
+0x31:'D',
+0x2c:'E',
+0x29:'F',
+0x1c:',',
+0x15:'.',
+0x127:'起始帧',
+0x1c9:'中继帧',
+         }
 def hammingDistance( x, y):
     #这里可能使用汉宁改进一下，识别为1，实际为0，可能是因为噪声引起，另外识别为0，实际为1可能是点打在了黑字上
     return bin(x^y).count('1')
@@ -20,12 +67,14 @@ def distance(p1,p2):
 #定义得到直线长度的函数
 
 def toInt(content):
-    ORG_POINT_COUNT=4
+    ORG_POINT_COUNT=3
     value = 0
-    for i in range(ORG_POINT_COUNT-1,-1,-1):
-        for j in range(ORG_POINT_COUNT-1,-1,-1):
+    # for i in range(ORG_POINT_COUNT-1,-1,-1):
+    #     for j in range(ORG_POINT_COUNT-1,-1,-1):
+    for i in range(0,ORG_POINT_COUNT):
+        for j in range (0,ORG_POINT_COUNT):
             value = value << 1
-            #value += content[i][j] > 0 ? 1: 0;
+
             if(content[i][j]>0):
                 value=value+1
     return value
@@ -58,7 +107,7 @@ def detect_blob(im):
     params.filterByArea = True
     #这个值要换算一下，针对 1080P的是3*3=9，如果图大于1080P要扩大面积
     params.minArea = 1#4,8均可
-    params.maxArea = 81
+    params.maxArea = 16
 
     # Filter by CircularityThis just measures how close to a circle the blob is.
     # E.g. a regular hexagon has higher circularity than say a square.
@@ -109,28 +158,28 @@ def detect_blob(im):
 
     crossPoints=[]
 
-    for i in range(1,5):
-        for j in range(1,5):
-            crossPoints.append((round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)))
+    for i in range(1,4):
+        for j in range(1,4):
+            crossPoints.append((round(i*half_windowSize*2/4),round(j*half_windowSize*2/4)))
 
             # cv2.circle(img_result, (round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)) ,
             #               4,(0, 255, 0))
 
-    array = [[0, 0, 0, 0], [0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]]
+    array = [[0, 0, 0 ], [0, 0, 0 ],[0, 0, 0 ]]
     #for pt in keypoints:
     for i in range(len(keypoints)):
         for j in range(len(crossPoints)):
             # 获取两点之间直线的长度
             l = distance(keypoints[i].pt, crossPoints[j])
             if l< half_windowSize/DISTANCE_LIMIT :
-                row =int(j/4)
-                col =j%4
+                row =int(j/3)
+                col =j%3
                 array[col][row]=1
                 #cv2.circle(img_result, crossPoints[j], 4,(0, 255, 0),thickness=-1)
 
     #将图片中黑色区过多的图片去除。
-    if total_black_area<0.85:
-        array = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+    # if total_black_area<0.85:
+    #     array = [[0, 0, 0 ], [0, 0, 0 ],[0, 0, 0 ]]
 
     myresult =toInt(array)
     #print(array,hex(myresult))
@@ -144,25 +193,43 @@ def detect_blob(im):
 def generate_date(img):
 
     #不同图片尺寸不一样，要动态算一下
-    global img_width,img_height,half_windowSize,beginX,beginY
+    global img_width,img_height,half_windowSize,beginX,beginY,minVal,maxVal
     img_width = img.shape[1]
     img_height = img.shape[0]
-    half_windowSize = int(img_width / 12)
+    #half_windowSize = int(img_width / 12)
+    half_windowSize = 40#
     beginX = half_windowSize
     beginY = half_windowSize
 
-    gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
+    #gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
+    gray_img= img.copy()
     result=[]
-    for j in range (0,10):
-        if(beginY + half_windowSize + j * half_windowSize * 2) >=img.shape[0]:
-            break
-        for i in range(0,6):
-            block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
-                             beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
-            ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
-            #print(j,i,j*6+i)
-            im_with_keypoints,keypoints,myresult=detect_blob(thresh_THRESH_OTSU)
-            result.append(myresult)
+    stepsize=10
+    jLoopNum=int((img_height-half_windowSize-1)/stepsize)
+    iLoopNum=int((img_width-half_windowSize-1)/stepsize)
+    for j in range (half_windowSize,jLoopNum):
+        # if(beginY + half_windowSize + j * half_windowSize * 2) >=img.shape[0]:
+        #     break
+        for i in range(half_windowSize,iLoopNum):
+
+            #block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
+            #                  beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
+            #(100, 640) 295 => 0x127 定义值=> 起始帧 距离 0.50
+            block_gray_img=cv2.getRectSubPix(gray_img, (128, 128), (i*stepsize , j *stepsize))
+            #ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
+            ret, thresh_bin = cv2.threshold(block_gray_img, minVal, maxVal, cv2.THRESH_BINARY)
+            #cv2.imshow("thresh_bin",thresh_bin)
+
+
+            im_with_keypoints,keypoints,myresult=detect_blob(thresh_bin)
+            if our_dict.get(myresult, 0) == 0:
+                pass
+            else:
+                print(myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] )
+                cv2.imshow("THRESH_BINARY", thresh_bin)
+                cv2.waitKey(0)
+            print((i*stepsize , j *stepsize) ,myresult)
+            #result.append(myresult)
     return result
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'])
@@ -212,7 +279,8 @@ def hist_lines(im):
     return y
 
 def main(args):
-    global checkpath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,img_width,img_height,imgori,img,zoom
+    global checkpath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,\
+        img_width,img_height,imgori,img,zoom,maxVal,minVal
     #checkpath = r"new_2x2/"
     # checkpath = r"new_3x3/"
     #checkpath = r"ori_img/"
@@ -223,7 +291,7 @@ def main(args):
     imgPaths = files
     image_inedex = 0
     imgPath = imgPaths[image_inedex]
-    DISTANCE_LIMIT = 3 # halfwindowsize的3分之一长度做为点的偏移极限
+    DISTANCE_LIMIT = 5 # halfwindowsize的3分之一长度做为点的偏移极限
 
 
     img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
@@ -236,15 +304,16 @@ def main(args):
     # cv2.resizeWindow("Keypoints", 768, 768)
 
     #half_windowSize = round(img_width / 48)
-    half_windowSize = round(img_width / 16)
+    half_windowSize = 40 #round(img_width / 25)#这个值要根据图像大小来估算
 
     print("half_windowSize size =", half_windowSize )
 
     beginX = half_windowSize
     beginY = half_windowSize
 
+
     # 不切分
-    img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
+   # img = img[beginY - half_windowSize:beginY + half_windowSize, beginX - half_windowSize:beginX + half_windowSize]
     # img = cv2.imread("test.png", cv2.IMREAD_GRAYSCALE)
 
 
@@ -287,6 +356,13 @@ def main(args):
     cv2.createTrackbar('min', 'res', 128, 255, nothing)
     cv2.createTrackbar('max', 'res', 255, 255, nothing)
     cur_flag = -1
+
+    maxVal = cv2.getTrackbarPos('max', 'res')
+    minVal = cv2.getTrackbarPos('min', 'res')
+    areaVal = cv2.getTrackbarPos('area', 'res')
+
+    #这里进行图片测试
+    generate_date(img)
 
     while (1):
         # gray_img = img.copy()# 不滤波
@@ -363,6 +439,46 @@ def main(args):
             img = img[beginY - half_windowSize:beginY + half_windowSize,
                   beginX - half_windowSize:beginX + half_windowSize]
 
+        if cur_flag == ord('/'):
+            beginX = beginX + 1
+            if beginX >= img_width:
+                beginX = img_width - half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+            # if cur_flag == ord('x') and key != pre_flag :
+        if cur_flag == ord('.'):
+            # if  pre_flag == -1:
+            beginY = beginY + 1
+            if beginY >= img_height:
+                beginY = img_height - half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord(','):
+            beginX = beginX - 1
+            if (beginX - half_windowSize < 0):
+                beginX = half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord('l'):
+            beginY = beginY - 1
+            if (beginY - half_windowSize < 0):
+                beginY = half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
         if cur_flag == ord(' '):
 
             img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
@@ -371,7 +487,6 @@ def main(args):
 
         if cur_flag == ord('v'):
             now  =datetime.now()  # 格式为 datetime.datetime
-
             now_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')# 格式为 str
 
             cv2.imwrite("./blob_img/blob"+now_time+".png", zoom)
@@ -448,21 +563,26 @@ def main(args):
                 # cv2.circle(img_result, (round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)) ,
                 #               4,(0, 255, 0))
 
-        array = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+        array = [[0, 0, 0 ], [0, 0, 0 ], [0, 0, 0 ] ]
         # for pt in keypoints:
+        totalDis=0
         for i in range(len(keypoints)):
             for j in range(len(crossPoints)):
                 # 获取两点之间直线的长度
                 l = distance(keypoints[i].pt, crossPoints[j])
                 if l < half_windowSize / DISTANCE_LIMIT:
-                    row = int(j / 4)
-                    col = j % 4
+                    row = int(j / 3)
+                    col = j % 3
                     array[col][row] = 1
                     cv2.circle(img_result, crossPoints[j], 2, (0, 255, 0), thickness=-1)
-        #
-        #     #print(array)
-        #     myresult =toInt(array)
-        #     print(myresult, "=>",hex(myresult))
+                    totalDis+=l
+
+        #print(array)
+        myresult =toInt(array)
+        if our_dict.get(myresult, 0) == 0:
+            pass
+        else:
+            print((beginX,beginY),myresult, "=>",hex(myresult),"定义值=>",our_dict[myresult],"距离",'%.2f'%totalDis)
 
 
         cv2.imshow('res', img_result)

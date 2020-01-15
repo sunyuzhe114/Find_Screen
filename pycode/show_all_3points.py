@@ -108,7 +108,8 @@ for index in draw_digit_0_to_9:
     cv2.putText(output_image, str(beginPos)+'=>'+str(hex(point_value_list[index])), (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
                 (0, 0, 255), 2)
-    print(str(beginPos)+'=>'+str(hex(point_value_list[index])))
+    #print('\''+str(beginPos)+'\''+':'+str(hex(point_value_list[index])))
+    print(  str(hex(point_value_list[index]))+ ':' '\'' + str(beginPos) + '\',')
     beginPos+=1
 
 #绘制字母字段
@@ -132,7 +133,8 @@ for index in draw_alphabet_a_to_z:
     cv2.putText(output_image, letter_list[beginPos-24]+'=>'+str(hex(point_value_list[index])), (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
                 (255, 0,0 ), 2)
-    print(letter_list[beginPos-24]+'=>'+str(hex(point_value_list[index])))
+    #print(letter_list[beginPos-24]+'=>'+str(hex(point_value_list[index])))
+    print(  str(hex(point_value_list[index]))+ ':' '\'' + str(letter_list[beginPos-24]) + '\',')
     beginPos+=1
 
 print('保留字段（待定）')
@@ -154,11 +156,11 @@ for index in draw_remain:
     cv2.putText(output_image, letter_remain[beginPos-72]+'=>'+str(hex(point_value_list[index])), (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
                 (0, 0,0 ), 2)
-    print(letter_remain[beginPos-72]+'=>'+str(hex(point_value_list[index])))
+    #print(letter_remain[beginPos-72]+'=>'+str(hex(point_value_list[index])))
+    print(str(hex(point_value_list[index])) + ':' '\'' + letter_remain[beginPos-72] + '\',')
     beginPos+=1
 
 
-print('起始帧')
 beginPos =82
 i = beginPos % 12
 j = int(beginPos / 12)
@@ -168,12 +170,11 @@ for p in stop_point_offset_list:
     value += int(1 << (8 - p))
     cv2.circle(output_image, (round(i * blocksize + pointOffset[p][0]), round(j * blocksize   +pointOffset[p][1])),
                5, (0, 0, 255), thickness=-1)
-cv2.putText(output_image, "begin", (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
-            0.7, (0, 0,0 ), 2)
-print('起始帧'+'=>'+str(hex(value)))
+cv2.putText(output_image, "Beg"+'='+str(hex(value)), (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
+            0.6, (0, 0,0 ), 2)
+#print('起始帧'+'=>'+str(hex(value)))
+print(str(hex(value)) + ':' '\'' + '起始帧'  + '\',')
 
-
-print('中继帧')
 beginPos =83
 i = beginPos % 12
 j = int(beginPos / 12)
@@ -184,10 +185,10 @@ for p in mid_point_offset_list:
     value += int(1 << (8 - p))
     cv2.circle(output_image, (round(i * blocksize + pointOffset[p][0]), round(j * blocksize   +pointOffset[p][1])),
                5, (0, 0, 255), thickness=-1)
-cv2.putText(output_image, "middle", (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
-            0.7, (0, 0,0 ), 2)
-print('中继帧'+'=>'+str(hex(value)))
-
+cv2.putText(output_image, "Mid"+'='+str(hex(value)), (round(i * blocksize), round(j * blocksize) + 18), cv2.FONT_HERSHEY_SIMPLEX,
+            0.6, (0, 0,0 ), 2)
+#print('中继帧'+'=>'+str(hex(value)))
+print(str(hex(value)) + ':' '\'' + '中继帧'  + '\',')
 
 cv2.namedWindow("img", 0)
 cv2.resizeWindow("img", 12 * blocksize, 7 * blocksize)
