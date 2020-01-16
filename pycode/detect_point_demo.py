@@ -53,7 +53,7 @@ our_dict={0x181:'0',
 0x1c:',',
 0x15:'.',
 0x127:'起始帧',
-0x1c9:'中继帧',
+0x1c9:'中继帧',#0x4f:'中继帧',
          }
 def hammingDistance( x, y):
     #这里可能使用汉宁改进一下，识别为1，实际为0，可能是因为噪声引起，另外识别为0，实际为1可能是点打在了黑字上
@@ -88,7 +88,7 @@ def nothing(x):
 #检测图像中的点的函数
 def detect_blob(im):
     global img_width,img_height,half_windowSize,beginX,beginY
-    total_black_area=cv2.countNonZero(im)/(im.shape[0]*im.shape[1])
+    #total_black_area=cv2.countNonZero(im)/(im.shape[0]*im.shape[1])
     #total_black_area=1
     #print('%.3f'%(total_black_area))
     params = cv2.SimpleBlobDetector_Params()
@@ -190,10 +190,12 @@ def detect_blob(im):
     # f.close()
     return im_with_keypoints,keypoints,myresult
 
-def generate_date(img):
+def generate_date(img ):
+    #return
 
     #不同图片尺寸不一样，要动态算一下
     global img_width,img_height,half_windowSize,beginX,beginY,minVal,maxVal
+
     img_width = img.shape[1]
     img_height = img.shape[0]
     #half_windowSize = int(img_width / 12)
@@ -204,31 +206,43 @@ def generate_date(img):
     #gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
     gray_img= img.copy()
     result=[]
-    stepsize=10
-    jLoopNum=int((img_height-half_windowSize-1)/stepsize)
-    iLoopNum=int((img_width-half_windowSize-1)/stepsize)
-    for j in range (half_windowSize,jLoopNum):
+    stepsize=20
+    jLoopNum=int((img_height-half_windowSize*2-1)/stepsize)
+    iLoopNum=int((img_width-half_windowSize*2-1)/stepsize)
+    for j in range (0,jLoopNum):
         # if(beginY + half_windowSize + j * half_windowSize * 2) >=img.shape[0]:
         #     break
-        for i in range(half_windowSize,iLoopNum):
+        for i in range(0,iLoopNum):
 
             #block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
-            #                  beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
+             #                 beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
             #(100, 640) 295 => 0x127 定义值=> 起始帧 距离 0.50
-            block_gray_img=cv2.getRectSubPix(gray_img, (128, 128), (i*stepsize , j *stepsize))
+            block_gray_img = gray_img[j*stepsize :j*stepsize + half_windowSize*2 ,
+                               i *stepsize :i *stepsize + half_windowSize*2 ]
+            #block_gray_img=cv2.getRectSubPix(gray_img, (half_windowSize*2, half_windowSize*2), ( i *stepsize,j*stepsize ))
+
+            #block_gray_img=cv2.cvtColor(block_gray_img,cv2.COLOR_BGR2GRAY)
             #ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
             ret, thresh_bin = cv2.threshold(block_gray_img, minVal, maxVal, cv2.THRESH_BINARY)
-            #cv2.imshow("thresh_bin",thresh_bin)
+            ori_img_show = imgori.copy()
 
+
+
+            #cv2.waitKey(0)
 
             im_with_keypoints,keypoints,myresult=detect_blob(thresh_bin)
             if our_dict.get(myresult, 0) == 0:
                 pass
             else:
-                print(myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] )
+                cv2.rectangle(ori_img_show, (i *stepsize,j*stepsize),
+                          (i *stepsize + half_windowSize*2, j*stepsize + half_windowSize*2),
+                          (0, 0, 255),
+                          4)
+                cv2.imshow("image", block_gray_img)
+                cv2.imshow("original_image", ori_img_show)
+                print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] )
                 cv2.imshow("THRESH_BINARY", thresh_bin)
                 cv2.waitKey(0)
-            print((i*stepsize , j *stepsize) ,myresult)
             #result.append(myresult)
     return result
 
@@ -279,7 +293,7 @@ def hist_lines(im):
     return y
 
 def main(args):
-    global checkpath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,\
+    global checkpath,imgPath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,\
         img_width,img_height,imgori,img,zoom,maxVal,minVal
     #checkpath = r"new_2x2/"
     # checkpath = r"new_3x3/"
@@ -327,31 +341,18 @@ def main(args):
 
     cv2.namedWindow('THRESH_BINARY', 0)
     cv2.resizeWindow( 'THRESH_BINARY',  512, 512)
-    # cv2.imshow('THRESH_BINARY_INV', thresh2)
-    # cv2.imshow('THRESH_TRUNC', thresh3)
-    # cv2.imshow('THRESH_TOZERO', thresh4)
-    # cv2.imshow('THRESH_TOZERO_INV', thresh5)
     cv2.namedWindow('THRESH_OTSU', 0)
     cv2.resizeWindow( 'THRESH_OTSU',  512, 512)
     # cv2.namedWindow('GAUSSIAN_C_adaptive', 0)
     # cv2.resizeWindow( 'GAUSSIAN_C_adaptive',  512, 512)
     # cv2.namedWindow('GAUSSIAN_C_Blur', 0)
     # cv2.resizeWindow( 'GAUSSIAN_C_Blur',  512, 512)
-    # cv2.namedWindow("gray_img", 0)
-    # cv2.resizeWindow('gray_img', 512, 512)
-    # cv2.namedWindow("gray_img_ext", 0)
-    # cv2.resizeWindow('gray_img_ext', 512, 512)
-    # cv2.namedWindow("gray_hist_ori", 0)
-    # cv2.resizeWindow('gray_hist_ori', 512, 512)
-    # cv2.namedWindow("gray_hist_ext", 0)
-    # cv2.resizeWindow('gray_hist_ext', 512, 512)
 
     cv2.namedWindow("zoom", 0)
     cv2.resizeWindow('zoom', 512, 512)
     cv2.namedWindow("image", 0)
     cv2.resizeWindow("image", 512, 512)
     cv2.setMouseCallback('image', on_mouse_grey_image)
-    # cv2.resizeWindow("MEAN_C_adaptive", 512, 512)
     cv2.createTrackbar('area', 'res', 15, 64, nothing)
     cv2.createTrackbar('min', 'res', 128, 255, nothing)
     cv2.createTrackbar('max', 'res', 255, 255, nothing)
@@ -362,7 +363,7 @@ def main(args):
     areaVal = cv2.getTrackbarPos('area', 'res')
 
     #这里进行图片测试
-    generate_date(img)
+    generate_date(imgori.copy())
 
     while (1):
         # gray_img = img.copy()# 不滤波
@@ -398,48 +399,9 @@ def main(args):
                   beginX - half_windowSize:beginX + half_windowSize]
             print("change file to ", imgPath)
 
-        # if cur_flag == ord('c') and key != pre_flag :
+
+
         if cur_flag == ord('c'):
-            beginX = beginX + half_windowSize * 2
-            if beginX >= img_width:
-                beginX = img_width - half_windowSize
-            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-            img_width = img.shape[1]
-            img_height = img.shape[0]
-            img = img[beginY - half_windowSize:beginY + half_windowSize,
-                  beginX - half_windowSize:beginX + half_windowSize]
-
-        # if cur_flag == ord('x') and key != pre_flag :
-        if cur_flag == ord('x'):
-            # if  pre_flag == -1:
-            beginY = beginY + half_windowSize * 2
-            if beginY >= img_height:
-                beginY = img_height - half_windowSize
-            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-            img_width = img.shape[1]
-            img_height = img.shape[0]
-            img = img[beginY - half_windowSize:beginY + half_windowSize,
-                  beginX - half_windowSize:beginX + half_windowSize]
-
-        if cur_flag == ord('z'):
-            beginX = beginX - half_windowSize * 2
-            if (beginX - half_windowSize < 0):
-                beginX = half_windowSize
-            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-            img_width = img.shape[1]
-            img_height = img.shape[0]
-            img = img[beginY - half_windowSize:beginY + half_windowSize,
-                  beginX - half_windowSize:beginX + half_windowSize]
-
-        if cur_flag == ord('s'):
-            beginY = beginY - half_windowSize * 2
-            if (beginY - half_windowSize < 0):
-                beginY = half_windowSize
-            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-            img = img[beginY - half_windowSize:beginY + half_windowSize,
-                  beginX - half_windowSize:beginX + half_windowSize]
-
-        if cur_flag == ord('/'):
             beginX = beginX + 1
             if beginX >= img_width:
                 beginX = img_width - half_windowSize
@@ -450,7 +412,7 @@ def main(args):
                   beginX - half_windowSize:beginX + half_windowSize]
 
             # if cur_flag == ord('x') and key != pre_flag :
-        if cur_flag == ord('.'):
+        if cur_flag == ord('x'):
             # if  pre_flag == -1:
             beginY = beginY + 1
             if beginY >= img_height:
@@ -461,7 +423,7 @@ def main(args):
             img = img[beginY - half_windowSize:beginY + half_windowSize,
                   beginX - half_windowSize:beginX + half_windowSize]
 
-        if cur_flag == ord(','):
+        if cur_flag == ord('z'):
             beginX = beginX - 1
             if (beginX - half_windowSize < 0):
                 beginX = half_windowSize
@@ -471,7 +433,7 @@ def main(args):
             img = img[beginY - half_windowSize:beginY + half_windowSize,
                   beginX - half_windowSize:beginX + half_windowSize]
 
-        if cur_flag == ord('l'):
+        if cur_flag == ord('s'):
             beginY = beginY - 1
             if (beginY - half_windowSize < 0):
                 beginY = half_windowSize
@@ -582,7 +544,7 @@ def main(args):
         if our_dict.get(myresult, 0) == 0:
             pass
         else:
-            print((beginX,beginY),myresult, "=>",hex(myresult),"定义值=>",our_dict[myresult],"距离",'%.2f'%totalDis)
+            print((beginX,beginY),thresh_bin.shape,myresult, "=>",hex(myresult),"定义值=>",our_dict[myresult],"距离",'%.2f'%totalDis)
 
 
         cv2.imshow('res', img_result)

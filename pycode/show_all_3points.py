@@ -179,7 +179,7 @@ beginPos =83
 i = beginPos % 12
 j = int(beginPos / 12)
 #mid_point_offset_list =[1,3,4,5,7]
-mid_point_offset_list =[0,1,2,5,8]
+mid_point_offset_list =[  2,5,6,7,8]
 value=0
 for p in mid_point_offset_list:
     value += int(1 << (8 - p))
