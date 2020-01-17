@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from time import *
 import cv2
 import os
 from matplotlib import pyplot as plt
@@ -53,7 +54,54 @@ our_dict={0x181:'0',
 0x1c:',',
 0x15:'.',
 0x127:'起始帧',
-0x1c9:'中继帧',#0x4f:'中继帧',
+0x4f:'中继帧',#0x4f:'中继帧',
+         }
+our_dict_index={0x181:0,
+0x144:1,
+0x142:2,
+0x141:3,
+0x121:4,
+0x111:5,
+0x10c:6,
+0x10a:7,
+0x109:8,
+0x105:9,
+0x103: 10,
+0xc4: 11,
+0xa1: 12,
+0x8c: 13,
+0x85: 14,
+0x64: 15,
+0x62: 16,
+0x61: 17,
+0x54: 18,
+0x4c: 19,
+0x46: 20,
+0x45: 21,
+0x182: 22,
+0x150: 23,
+0x128: 24,
+0x118: 25,
+0x114: 26,
+0x112: 27,
+0xc2: 28,
+0x94: 29,
+0x92: 30,
+0x91: 31,
+0x86: 32,
+0x83: 33,
+0x70: 34,
+0x68: 35,
+0x52:36,
+0x51:37,
+0x38:38,
+0x31:39,
+0x2c:40,
+0x29:41,
+0x1c:42,
+0x15:43,
+0x127:44,
+0x4f:45,#0x4f:'中继帧',
          }
 def hammingDistance( x, y):
     #这里可能使用汉宁改进一下，识别为1，实际为0，可能是因为噪声引起，另外识别为0，实际为1可能是点打在了黑字上
@@ -140,6 +188,9 @@ def detect_blob(im):
 
     # Detect blobs.
     keypoints = detector.detect(im)
+
+    if(len(keypoints)==0):
+        return None,keypoints,0
    # print("detect points ",len(keypoints))
     # Draw detected blobs as red circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
@@ -189,9 +240,52 @@ def detect_blob(im):
     # f.write(hex(myresult) + ',')
     # f.close()
     return im_with_keypoints,keypoints,myresult
+def decode_data_block (img_data_block ):
+    # 不同图片尺寸不一样，要动态算一下
+    img_width = img_data_block.shape[1]
+    img_height = img_data_block.shape[0]
+    half_windowSize = int(img_width / 8)
+    beginX = half_windowSize
+    beginY = half_windowSize
+
+    gray_img = img_data_block.copy()
+    time_block_ID=[2,4,8]
+    user_block_ID=[1,5,9,3,7,11]
+    result = []
+    for j in range(0, 3):
+        if (beginY + half_windowSize + j * half_windowSize * 2) >= img.shape[0]:
+            break
+        for i in range(0, 4):
+            block_gray_img = gray_img[
+                             beginY - half_windowSize + j * half_windowSize * 2:beginY + half_windowSize + j * half_windowSize * 2,
+                             beginX - half_windowSize + i * half_windowSize * 2:beginX + half_windowSize + i * half_windowSize * 2]
+            ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY)
+            # print(j,i,j*6+i)
+            im_with_keypoints, keypoints, myresult = detect_blob(thresh_THRESH_OTSU)
+            result.append(myresult)
+    username=[]
+    time_data=[]
+    for userid in user_block_ID:
+        if our_dict.get(result[userid], 0) == 0:
+            username.append('?')
+            pass
+        else:
+            username.append(our_dict[result[userid]])
+    for timeid in time_block_ID:
+        if our_dict.get(result[timeid], 0) == 0:
+            time_data.append('?')
+            pass
+        else:
+            time_data.append( result[timeid] )
+
+    print(username,time_data)
+    return username,time_data
+
+
 
 def generate_date(img ):
-    #return
+
+
 
     #不同图片尺寸不一样，要动态算一下
     global img_width,img_height,half_windowSize,beginX,beginY,minVal,maxVal
@@ -199,14 +293,18 @@ def generate_date(img ):
     img_width = img.shape[1]
     img_height = img.shape[0]
     #half_windowSize = int(img_width / 12)
+    print("图片大小 ",img.shape)
     half_windowSize = 40#
+    stepsize=20
     beginX = half_windowSize
     beginY = half_windowSize
 
     #gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
+    user_list=[]
+    time_list=[]
     gray_img= img.copy()
     result=[]
-    stepsize=20
+
     jLoopNum=int((img_height-half_windowSize*2-1)/stepsize)
     iLoopNum=int((img_width-half_windowSize*2-1)/stepsize)
     for j in range (0,jLoopNum):
@@ -234,17 +332,74 @@ def generate_date(img ):
             if our_dict.get(myresult, 0) == 0:
                 pass
             else:
-                cv2.rectangle(ori_img_show, (i *stepsize,j*stepsize),
-                          (i *stepsize + half_windowSize*2, j*stepsize + half_windowSize*2),
-                          (0, 0, 255),
-                          4)
-                cv2.imshow("image", block_gray_img)
-                cv2.imshow("original_image", ori_img_show)
-                print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] )
-                cv2.imshow("THRESH_BINARY", thresh_bin)
-                cv2.waitKey(0)
+                if(our_dict[myresult]=="起始帧"):
+                    cv2.rectangle(ori_img_show, (i *stepsize,j*stepsize),
+                              (i *stepsize + half_windowSize*8, j*stepsize + half_windowSize*6),
+                              (0, 0, 255),
+                              4)
+                    data_block_img = gray_img[j * stepsize:j * stepsize + half_windowSize * 6,
+                                     i * stepsize:i * stepsize + half_windowSize * 8]
+                    user_name,user_time=decode_data_block(data_block_img)
+                    user_list.append(user_name)
+                    time_list.append(user_time)
+                    #cv2.imshow("image", block_gray_img)
+                    #cv2.imshow("original_image", ori_img_show)
+                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                    #cv2.imshow("THRESH_BINARY", data_block_img)
+                    #cv2.waitKey(0)
+                if (our_dict[myresult] == "中继帧"):
+                    cv2.rectangle(ori_img_show, (i *stepsize- half_windowSize*4,j*stepsize-  half_windowSize*2),
+                              (i *stepsize + half_windowSize*4, j*stepsize + half_windowSize*4),
+                              (0, 0, 255),
+                              4)
+                    data_block_img = gray_img[j * stepsize-  half_windowSize*2:j * stepsize + half_windowSize * 4,
+                                     i * stepsize- half_windowSize*4:i * stepsize + half_windowSize * 4]
+                    user_name, user_time = decode_data_block(data_block_img)
+                    user_list.append(user_name)
+                    time_list.append(user_time)
+                    #cv2.imshow("image", block_gray_img)
+                    #cv2.imshow("original_image", ori_img_show)
+                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                    #cv2.imshow("THRESH_BINARY", data_block_img)
+                    #cv2.waitKey(0)
+                    pass
             #result.append(myresult)
+    #print(user_list,time_list)
+
+    user_name_T = list(map(list, zip(*user_list)))
+    user_time_T = list(map(list, zip(*time_list)))
+
+    final_user_name_list=[]
+    final_user_time_list=[]
+    for i in range(0,6):
+        final_user_name_list.append(max_count(user_name_T[i]))
+    for i in range(0, 3):
+        final_user_time_list.append(max_count(user_time_T[i]))
+    final_str_username=''.join(str(i) for i in final_user_name_list)
+    #这里要把时间 decode一下
+
+    strTime = decodetime(final_user_time_list)
+    #final_str_usertime = ' '.join(str(i) for i in final_user_name_list)
+    print(final_str_username,strTime)
+
     return result
+def max_count(lt):
+    # 定义一个字典，用于存放元素及出现的次数
+    d = {}
+    # 记录最大的次数的元素
+    max_key = None
+    # 遍历列表，统计每个元素出现的次数，然后保存到字典中
+    for i in lt:
+        if i not in d and i!='?':
+            # 计算元素出现的次数
+            count = lt.count(i)
+            # 保存到字典中
+            d[i] = count
+            # 记录次数最大的元素
+            if count > d.get(max_key, 0):
+                max_key = i
+    return max_key
+
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'])
 def allowed_file(filename):
@@ -291,8 +446,23 @@ def hist_lines(im):
         cv2.line(h,(x,0),(x,y),(255,255,255))
     y = np.flipud(h)
     return y
+def decodetime(final_user_time_list):
+    timeData=0
+    for i in range(0,3):
+        #timeData += timeData * 44 + final_user_time_list_code[i]
+        timeData += timeData * 44 + our_dict_index[final_user_time_list[i]]
 
+
+    hour = timeData % 24
+    timeData=int(timeData /  24)
+    day = int(timeData % 31) + 1
+    timeData=int(timeData /  31)
+    month = timeData % 12 + 1
+    year = int(timeData / 12) + 2020
+    strTime=str(year)+"-"+str(month)+"-"+str(day)+" "+str(hour)+"h"
+    return  strTime
 def main(args):
+
     global checkpath,imgPath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,\
         img_width,img_height,imgori,img,zoom,maxVal,minVal
     #checkpath = r"new_2x2/"
@@ -363,7 +533,14 @@ def main(args):
     areaVal = cv2.getTrackbarPos('area', 'res')
 
     #这里进行图片测试
-    generate_date(imgori.copy())
+
+    begin_time = time()
+
+    generate_date(cv2.imread(checkpath + '/1080-3.png', cv2.IMREAD_GRAYSCALE))
+
+    end_time = time()
+    run_time = end_time - begin_time
+    print('该循环程序运行时间：', run_time)  # 该循环程序运行时间： 1.4201874732
 
     while (1):
         # gray_img = img.copy()# 不滤波
