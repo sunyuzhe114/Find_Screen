@@ -212,7 +212,6 @@ def main(args):
         my_image = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
         #这里将my_image从屏幕区中扣出，如果my_image是手机原图则不调用下面的话
         squares,my_image=find_screen.getFinalImage(my_image)
-
         os.makedirs(checkpath+"tmp", exist_ok=True)
         cv2.imwrite(checkpath+"tmp/_"+imgPath,my_image)
         chekdata=generate_date(my_image)

@@ -7,101 +7,21 @@ from matplotlib import pyplot as plt
 import argparse
 #导入math包
 import math
-import find_screen
 from datetime import datetime
-our_dict={0x181:'0',
-0x144:'1',
-0x142:'2',
-0x141:'3',
-0x121:'4',
-0x111:'5',
-0x10c:'6',
-0x10a:'7',
-0x109:'8',
-0x105:'9',
-0x103: 'a',
-0xc4: 'b',
-0xa1: 'c',
-0x8c: 'd',
-0x85: 'e',
-0x64: 'f',
-0x62: 'g',
-0x61: 'h',
-0x54: 'i',
-0x4c: 'j',
-0x46: 'k',
-0x45: 'l',
-0x182: 'm',
-0x150: 'n',
-0x128: 'o',
-0x118: 'p',
-0x114: 'q',
-0x112: 'r',
-0xc2: 's',
-0x94: 't',
-0x92: 'u',
-0x91: 'v',
-0x86: 'w',
-0x83: 'x',
-0x70: 'y',
-0x68: 'z',
-0x52:'A',
-0x51:'B',
-0x38:'C',
-0x31:'D',
-0x2c:'E',
-0x29:'F',
-0x1c:',',
-0x15:'.',
-0x127:'起始帧',
-0x4f:'中继帧',#0x4f:'中继帧',
-         }
-our_dict_index={0x181:0,
-0x144:1,
-0x142:2,
-0x141:3,
-0x121:4,
-0x111:5,
-0x10c:6,
-0x10a:7,
-0x109:8,
-0x105:9,
-0x103: 10,
-0xc4: 11,
-0xa1: 12,
-0x8c: 13,
-0x85: 14,
-0x64: 15,
-0x62: 16,
-0x61: 17,
-0x54: 18,
-0x4c: 19,
-0x46: 20,
-0x45: 21,
-0x182: 22,
-0x150: 23,
-0x128: 24,
-0x118: 25,
-0x114: 26,
-0x112: 27,
-0xc2: 28,
-0x94: 29,
-0x92: 30,
-0x91: 31,
-0x86: 32,
-0x83: 33,
-0x70: 34,
-0x68: 35,
-0x52:36,
-0x51:37,
-0x38:38,
-0x31:39,
-0x2c:40,
-0x29:41,
-0x1c:42,
-0x15:43,
-0x127:44,
-0x4f:45,#0x4f:'中继帧',
+import find_screen
+bshow_debug_window=True
+our_dict = {0x181: '0', 0x144: '1', 0x142: '2', 0x141: '3', 0x121: '4', 0x111: '5', 0x10c: '6', 0x10a: '7', 0x109: '8',
+            0x105: '9', 0x103: 'a',  0xc4: 'b',  0xa1: 'c',  0x8c: 'd',  0x85: 'e',  0x64: 'f',  0x62: 'g',  0x61: 'h',
+            0x54 : 'i' , 0x4c: 'j',  0x46: 'k',  0x45: 'l', 0x182: 'm', 0x150: 'n', 0x128: 'o', 0x118: 'p', 0x114: 'q',
+            0x112: 'r',  0xc2: 's',  0x94: 't',  0x92: 'u',  0x91: 'v',  0x86: 'w',  0x83: 'x',  0x70: 'y',  0x68: 'z',
+             0x52: 'A',  0x51: 'B',  0x38: 'C',  0x31: 'D',  0x2c: 'E',  0x29: 'F',  0x1c: ',',  0x15: '.',
+            0x127: '起始帧', 0x4f: '中继帧',
+            }
+our_dict_index={0x181:  0,0x144:  1, 0x142:  2, 0x141:  3,0x121:4  , 0x111:5 , 0x10c:6 ,0x10a:7 , 0x109:8 , 0x105:9 ,0x103: 10,
+                0xc4:  11,0xa1:  12,  0x8c: 13,  0x85: 14,0x64: 15 , 0x62: 16, 0x61: 17,0x54: 18, 0x4c: 19, 0x46: 20, 0x45: 21,
+                0x182: 22,0x150: 23, 0x128: 24, 0x118: 25,0x114: 26,0x112: 27, 0xc2: 28,0x94: 29, 0x92: 30, 0x91: 31, 0x86: 32,
+                0x83:  33,0x70:  34,  0x68: 35,  0x52: 36,0x51:37,    0x38:38, 0x31:39,  0x2c:40,  0x29:41,  0x1c:42,  0x15:43,
+                0x127: 44,0x4f:  45,
          }
 def hammingDistance( x, y):
     #这里可能使用汉宁改进一下，识别为1，实际为0，可能是因为噪声引起，另外识别为0，实际为1可能是点打在了黑字上
@@ -281,21 +201,39 @@ def decode_data_block (img_data_block ):
     print(username,time_data)
     return username,time_data
 
-
-
 def generate_date(img ):
-
-
+    begin_time = time()
+    result = {}
+    if img is None :
+        result["result_username"] = 0
+        result["username"] = '??????'
+        result["result_usertime"] = 0
+        result["usertime"] = [None, None, None]
+        end_time = time()
+        run_time = end_time - begin_time
+        result["timecost"] = '%.1f' % run_time  # 该循环程序运行时间： 1.4201874732
+        result["reason"]="load image error"
+        print(result)
+        return result
 
     #不同图片尺寸不一样，要动态算一下
     global img_width,img_height,half_windowSize,beginX,beginY,minVal,maxVal
 
+
     img_width = img.shape[1]
     img_height = img.shape[0]
     #half_windowSize = int(img_width / 12)
-    print("图片大小 ",img.shape)
-    half_windowSize = 40#
+    #print("图片大小 ",img.shape)
+
     stepsize=20
+    if(img_width==1080):
+        half_windowSize = 40#
+        stepsize=20
+    else:# 后期这里要根据不同图片的大小来计算
+        rate=img_width/1080
+        half_windowSize = 40  *rate#
+        stepsize = 20*rate
+
     beginX = half_windowSize
     beginY = half_windowSize
 
@@ -303,65 +241,72 @@ def generate_date(img ):
     user_list=[]
     time_list=[]
     gray_img= img.copy()
-    result=[]
+
 
     jLoopNum=int((img_height-half_windowSize*2-1)/stepsize)
     iLoopNum=int((img_width-half_windowSize*2-1)/stepsize)
+    b_exit=False
     for j in range (0,jLoopNum):
-        # if(beginY + half_windowSize + j * half_windowSize * 2) >=img.shape[0]:
-        #     break
+        if b_exit:
+             break
         for i in range(0,iLoopNum):
 
             #block_gray_img = gray_img[beginY - half_windowSize+j*half_windowSize*2:beginY + half_windowSize+j*half_windowSize*2,
              #                 beginX - half_windowSize+i*half_windowSize*2:beginX + half_windowSize+i*half_windowSize*2]
             #(100, 640) 295 => 0x127 定义值=> 起始帧 距离 0.50
-            block_gray_img = gray_img[j*stepsize :j*stepsize + half_windowSize*2 ,
-                               i *stepsize :i *stepsize + half_windowSize*2 ]
+            block_gray_img = gray_img[int(j*stepsize) :int(j*stepsize + half_windowSize*2) ,
+                               int(i *stepsize) :int(i *stepsize + half_windowSize*2 )]
             #block_gray_img=cv2.getRectSubPix(gray_img, (half_windowSize*2, half_windowSize*2), ( i *stepsize,j*stepsize ))
 
             #block_gray_img=cv2.cvtColor(block_gray_img,cv2.COLOR_BGR2GRAY)
             #ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
             ret, thresh_bin = cv2.threshold(block_gray_img, minVal, maxVal, cv2.THRESH_BINARY)
-            ori_img_show = imgori.copy()
+            #ori_img_show = imgori.copy()
 
 
 
             #cv2.waitKey(0)
-
+            #在未找到起始帧之前，可以多值进行二值化
             im_with_keypoints,keypoints,myresult=detect_blob(thresh_bin)
             if our_dict.get(myresult, 0) == 0:
                 pass
             else:
                 if(our_dict[myresult]=="起始帧"):
-                    cv2.rectangle(ori_img_show, (i *stepsize,j*stepsize),
-                              (i *stepsize + half_windowSize*8, j*stepsize + half_windowSize*6),
-                              (0, 0, 255),
-                              4)
-                    data_block_img = gray_img[j * stepsize:j * stepsize + half_windowSize * 6,
-                                     i * stepsize:i * stepsize + half_windowSize * 8]
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize),int(j*stepsize)),
+                                  (int(i *stepsize + half_windowSize*8), int(j*stepsize + half_windowSize*6)),
+                                  (0, 0, 255),
+                                  4)
+                    data_block_img = gray_img[int(j * stepsize):int(j * stepsize + half_windowSize * 6),
+                                     int(i * stepsize):int(i * stepsize + half_windowSize * 8)]
                     user_name,user_time=decode_data_block(data_block_img)
                     user_list.append(user_name)
                     time_list.append(user_time)
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+                    cv2.imshow("image", block_gray_img)
+                    cv2.imshow("original_image", ori_img_show)
+                    print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                    cv2.imshow("THRESH_BINARY", data_block_img)
+                    cv2.waitKey(0)
                 if (our_dict[myresult] == "中继帧"):
-                    cv2.rectangle(ori_img_show, (i *stepsize- half_windowSize*4,j*stepsize-  half_windowSize*2),
-                              (i *stepsize + half_windowSize*4, j*stepsize + half_windowSize*4),
-                              (0, 0, 255),
-                              4)
-                    data_block_img = gray_img[j * stepsize-  half_windowSize*2:j * stepsize + half_windowSize * 4,
-                                     i * stepsize- half_windowSize*4:i * stepsize + half_windowSize * 4]
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize- half_windowSize*4),int(j*stepsize-  half_windowSize*2)),
+                                  (int(i *stepsize + half_windowSize*4),int( j*stepsize + half_windowSize*4)),
+                                  (0, 0, 255),
+                                  4)
+                    #这晨如果检测错误，会取出异常区
+                    data_block_img = gray_img[int(j * stepsize-  half_windowSize*2):int(j * stepsize + half_windowSize * 4),
+                                     int(i * stepsize- half_windowSize*4):int(i * stepsize + half_windowSize * 4)]
                     user_name, user_time = decode_data_block(data_block_img)
                     user_list.append(user_name)
                     time_list.append(user_time)
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+                    # b_exit=True
+                    # break
+                    if bshow_debug_window is True:
+                        cv2.imshow("image", block_gray_img)
+                        cv2.imshow("original_image", ori_img_show)
+                        print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                        cv2.imshow("THRESH_BINARY", data_block_img)
+                        cv2.waitKey(0)
                     pass
             #result.append(myresult)
     #print(user_list,time_list)
@@ -371,18 +316,55 @@ def generate_date(img ):
 
     final_user_name_list=[]
     final_user_time_list=[]
-    for i in range(0,6):
-        final_user_name_list.append(max_count(user_name_T[i]))
+    result = {}
+    if len(user_name_T)==0:
+        result["result_username"] = 0
+        result["username"] = '??????'
+        result["result_usertime"] = 0
+        result["usertime"] = [None,None,None]
+        end_time = time()
+        run_time = end_time - begin_time
+        result["reason"] = "final_user_name_list =NULL"
+        result["timecost"] = '%.1f' % run_time  # 该循环程序运行时间： 1.4201874732
+        return result
+    else:
+        for i in range(0,6):
+            final_user_name_list.append(max_count(user_name_T[i]))
+
     for i in range(0, 3):
         final_user_time_list.append(max_count(user_time_T[i]))
+
     final_str_username=''.join(str(i) for i in final_user_name_list)
     #这里要把时间 decode一下
 
-    strTime = decodetime(final_user_time_list)
+    if(final_str_username.find("None")!=-1):
+        errornum=final_str_username.count('None')
+        result["result_username"] = '%.2f'%((6-errornum)/6)
+        final_str_username=final_str_username.replace("None","?")
+    else:
+        result["result_username"] = 1
+
+    result["username"] = final_str_username
+
+    final_str_time=''
+    time_index = final_user_time_list.index(None) if None in final_user_time_list else -1
+    if(time_index!=-1):
+        errornum = final_user_time_list.count(None)
+        result["result_usertime"] =  '%.2f'%((3-errornum)/3)
+        final_str_time=str(final_user_time_list)
+    else:
+        result["result_usertime"] = 1
+        final_str_time = decodetime(final_user_time_list)
+    result["usertime"] = final_str_time
+    result["reason"] = ""
+    end_time = time()
+    run_time = end_time - begin_time
+    result["timecost"]= '%.1f'%run_time   # 该循环程序运行时间： 1.4201874732
     #final_str_usertime = ' '.join(str(i) for i in final_user_name_list)
-    print(final_str_username,strTime)
+    print(result)
 
     return result
+
 def max_count(lt):
     # 定义一个字典，用于存放元素及出现的次数
     d = {}
@@ -535,8 +517,8 @@ def main(args):
     #这里进行图片测试
 
     begin_time = time()
-
-    generate_date(cv2.imread(checkpath + '/1080-3.png', cv2.IMREAD_GRAYSCALE))
+    ori_img_show=cv2.imread(checkpath + '/1080-3.png', cv2.IMREAD_GRAYSCALE)
+    generate_date(ori_img_show.copy())
 
     end_time = time()
     run_time = end_time - begin_time
@@ -747,12 +729,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='saved_models/stegastamp_pretrained')
-    parser.add_argument('--image', type=str, default='encoded_img/lALPDgQ9rbLnuyZWVQ_85_86.png')
-    parser.add_argument('--images_dir', type=str, default=None)
-    parser.add_argument('--secret_size', type=int, default=100)
+    parser.add_argument('--image', type=str, help="检测单张图片，例如: python img_process_demo.py --image 1x1/ori/720.png",
+                        default=None)
     main_args = parser.parse_args()
-
+    opt, unparsed = parser.parse_known_args()
     main(main_args)
 
 

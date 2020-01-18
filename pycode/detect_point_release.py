@@ -2,8 +2,12 @@ import numpy as np
 from time import *
 import cv2
 import argparse
+import os
 #导入math包
 import math
+
+import find_screen
+bshow_debug_window=True
 
 our_dict = {0x181: '0', 0x144: '1', 0x142: '2', 0x141: '3', 0x121: '4', 0x111: '5', 0x10c: '6', 0x10a: '7', 0x109: '8',
             0x105: '9', 0x103: 'a',  0xc4: 'b',  0xa1: 'c',  0x8c: 'd',  0x85: 'e',  0x64: 'f',  0x62: 'g',  0x61: 'h',
@@ -191,7 +195,7 @@ def decode_data_block (img_data_block ):
         else:
             time_data.append( result[timeid] )
 
-    #print(username,time_data)
+    print(username,time_data)
     return username,time_data
 
 
@@ -224,12 +228,10 @@ def generate_date(img ):
     if(img_width==1080):
         half_windowSize = 40#
         stepsize=20
-    elif(img_width==720):
-        half_windowSize = 26.67#
-        stepsize=13.33
     else:# 后期这里要根据不同图片的大小来计算
-        half_windowSize = 40  #
-        stepsize = 20
+        rate=img_width/1080
+        half_windowSize = 40  *rate#
+        stepsize = 20*rate
 
     beginX = half_windowSize
     beginY = half_windowSize
@@ -263,31 +265,34 @@ def generate_date(img ):
 
 
             #cv2.waitKey(0)
-
+            #在未找到起始帧之前，可以多值进行二值化
             im_with_keypoints,keypoints,myresult=detect_blob(thresh_bin)
             if our_dict.get(myresult, 0) == 0:
                 pass
             else:
                 if(our_dict[myresult]=="起始帧"):
-                    # cv2.rectangle(ori_img_show, (int(i *stepsize),int(j*stepsize)),
-                    #           (int(i *stepsize + half_windowSize*8), int(j*stepsize + half_windowSize*6)),
-                    #           (0, 0, 255),
-                    #           4)
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize),int(j*stepsize)),
+                                  (int(i *stepsize + half_windowSize*8), int(j*stepsize + half_windowSize*6)),
+                                  (0, 0, 255),
+                                  4)
                     data_block_img = gray_img[int(j * stepsize):int(j * stepsize + half_windowSize * 6),
                                      int(i * stepsize):int(i * stepsize + half_windowSize * 8)]
                     user_name,user_time=decode_data_block(data_block_img)
                     user_list.append(user_name)
                     time_list.append(user_time)
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+                    cv2.imshow("image", block_gray_img)
+                    cv2.imshow("original_image", ori_img_show)
+                    print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                    cv2.imshow("THRESH_BINARY", data_block_img)
+                    cv2.waitKey(0)
                 if (our_dict[myresult] == "中继帧"):
-                    # cv2.rectangle(ori_img_show, (int(i *stepsize- half_windowSize*4),int(j*stepsize-  half_windowSize*2)),
-                    #           (int(i *stepsize + half_windowSize*4),int( j*stepsize + half_windowSize*4)),
-                    #           (0, 0, 255),
-                    #           4)
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize- half_windowSize*4),int(j*stepsize-  half_windowSize*2)),
+                                  (int(i *stepsize + half_windowSize*4),int( j*stepsize + half_windowSize*4)),
+                                  (0, 0, 255),
+                                  4)
+                    #这晨如果检测错误，会取出异常区
                     data_block_img = gray_img[int(j * stepsize-  half_windowSize*2):int(j * stepsize + half_windowSize * 4),
                                      int(i * stepsize- half_windowSize*4):int(i * stepsize + half_windowSize * 4)]
                     user_name, user_time = decode_data_block(data_block_img)
@@ -295,11 +300,12 @@ def generate_date(img ):
                     time_list.append(user_time)
                     # b_exit=True
                     # break
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+                    if bshow_debug_window is True:
+                        cv2.imshow("image", block_gray_img)
+                        cv2.imshow("original_image", ori_img_show)
+                        print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                        cv2.imshow("THRESH_BINARY", data_block_img)
+                        cv2.waitKey(0)
                     pass
             #result.append(myresult)
     #print(user_list,time_list)
@@ -437,14 +443,47 @@ def decodetime(final_user_time_list):
     strTime=str(year)+"-"+str(month)+"-"+str(day)+" "+str(hour)+"h"
     return  strTime
 
+
 def main(args):
 
     global checkpath,imgPath,DISTANCE_LIMIT ,half_windowSize,ori_img_show,beginX,beginY,\
-        img_width,img_height,imgori,img,zoom,maxVal,minVal
+        img_width,img_height,imgori,img,zoom,maxVal,minVal,bshow_debug_window
+
 
     checkpath = ''
     DISTANCE_LIMIT = 5
     #二值化最大与最小值
+
+    cv2.namedWindow("original_image", 0)
+    cv2.setMouseCallback('original_image', on_mouse_original_image)
+    cv2.resizeWindow('original_image', 540, 960)
+    cv2.namedWindow('res', 0)
+    cv2.resizeWindow("res", 512, 674)
+
+    cv2.namedWindow('THRESH_BINARY', 0)
+    cv2.resizeWindow('THRESH_BINARY', 512, 512)
+    cv2.namedWindow('THRESH_OTSU', 0)
+    cv2.resizeWindow('THRESH_OTSU', 512, 512)
+    # cv2.namedWindow('GAUSSIAN_C_adaptive', 0)
+    # cv2.resizeWindow( 'GAUSSIAN_C_adaptive',  512, 512)
+    # cv2.namedWindow('GAUSSIAN_C_Blur', 0)
+    # cv2.resizeWindow( 'GAUSSIAN_C_Blur',  512, 512)
+
+    cv2.namedWindow("zoom", 0)
+    cv2.resizeWindow('zoom', 512, 512)
+    cv2.namedWindow("image", 0)
+    cv2.resizeWindow("image", 512, 512)
+    cv2.setMouseCallback('image', on_mouse_grey_image)
+    cv2.createTrackbar('area', 'res', 15, 64, nothing)
+    cv2.createTrackbar('min', 'res', 128, 255, nothing)
+    cv2.createTrackbar('max', 'res', 255, 255, nothing)
+    cur_flag = -1
+
+    maxVal = cv2.getTrackbarPos('max', 'res')
+    minVal = cv2.getTrackbarPos('min', 'res')
+    areaVal = cv2.getTrackbarPos('area', 'res')
+
+
     maxVal = 255
     minVal = 128
     files = []
@@ -458,7 +497,11 @@ def main(args):
             continue
 
         my_image = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-
+        # squares, my_image = find_screen.getFinalImage(my_image)
+        # os.makedirs(checkpath + "tmp", exist_ok=True)
+        # cv2.imwrite(checkpath + "tmp/_" + imgPath, my_image)
+        imgori = my_image.copy()
+        ori_img_show = my_image.copy()
         generate_date(my_image)
 
     cv2.destroyAllWindows()
