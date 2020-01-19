@@ -7,9 +7,10 @@ from matplotlib import pyplot as plt
 import argparse
 #导入math包
 import math
-import find_screen
 from datetime import datetime
 
+import find_screen
+bshow_debug_window=True
 our_dict = {0x181: '0', 0x144: '1', 0x142: '2', 0x141: '3', 0x121: '4', 0x111: '5', 0x10c: '6', 0x10a: '7', 0x109: '8',
             0x105: '9', 0x103: 'a',  0xc4: 'b',  0xa1: 'c',  0x8c: 'd',  0x85: 'e',  0x64: 'f',  0x62: 'g',  0x61: 'h',
             0x54 : 'i' , 0x4c: 'j',  0x46: 'k',  0x45: 'l', 0x182: 'm', 0x150: 'n', 0x128: 'o', 0x118: 'p', 0x114: 'q',
@@ -21,7 +22,7 @@ our_dict_index={0x181:  0,0x144:  1, 0x142:  2, 0x141:  3,0x121:4  , 0x111:5 , 0
                 0xc4:  11,0xa1:  12,  0x8c: 13,  0x85: 14,0x64: 15 , 0x62: 16, 0x61: 17,0x54: 18, 0x4c: 19, 0x46: 20, 0x45: 21,
                 0x182: 22,0x150: 23, 0x128: 24, 0x118: 25,0x114: 26,0x112: 27, 0xc2: 28,0x94: 29, 0x92: 30, 0x91: 31, 0x86: 32,
                 0x83:  33,0x70:  34,  0x68: 35,  0x52: 36,0x51:37,    0x38:38, 0x31:39,  0x2c:40,  0x29:41,  0x1c:42,  0x15:43,
-                0x127: 44,0x4f:  45,#0x4f:'中继帧',
+                0x127: 44,0x4f:  45,
          }
 def hammingDistance( x, y):
     #这里可能使用汉宁改进一下，识别为1，实际为0，可能是因为噪声引起，另外识别为0，实际为1可能是点打在了黑字上
@@ -201,28 +202,41 @@ def decode_data_block (img_data_block ):
     print(username,time_data)
     return username,time_data
 
-
-
 def generate_date(img ):
+
+    begin_time = time()
+    result = {}
+    if img is None :
+        result["result_username"] = 0
+        result["username"] = '??????'
+        result["result_usertime"] = 0
+        result["usertime"] = [None, None, None]
+        end_time = time()
+        run_time = end_time - begin_time
+        result["timecost"] = '%.1f' % run_time  # 该循环程序运行时间： 1.4201874732
+        result["reason"]="load image error"
+        print(result)
+        return result
 
     #不同图片尺寸不一样，要动态算一下
     global img_width,img_height,half_windowSize,beginX,beginY,minVal,maxVal
 
+
     img_width = img.shape[1]
     img_height = img.shape[0]
     #half_windowSize = int(img_width / 12)
+
     print("图片大小 ",img.shape)
+
 
     stepsize=20
     if(img_width==1080):
         half_windowSize = 40#
         stepsize=20
-    elif(img_width==720):
-        half_windowSize = 26.67#
-        stepsize=13.33
-    else:
-        half_windowSize = 40  #
-        stepsize = 20
+    else:# 后期这里要根据不同图片的大小来计算
+        rate=img_width/1080
+        half_windowSize = 40  *rate#
+        stepsize = 20*rate
 
     beginX = half_windowSize
     beginY = half_windowSize
@@ -231,7 +245,7 @@ def generate_date(img ):
     user_list=[]
     time_list=[]
     gray_img= img.copy()
-    result=[]
+
 
     jLoopNum=int((img_height-half_windowSize*2-1)/stepsize)
     iLoopNum=int((img_width-half_windowSize*2-1)/stepsize)
@@ -251,36 +265,41 @@ def generate_date(img ):
             #block_gray_img=cv2.cvtColor(block_gray_img,cv2.COLOR_BGR2GRAY)
             #ret, thresh_THRESH_OTSU = cv2.threshold(block_gray_img, 0, 255, cv2.THRESH_OTSU|cv2.THRESH_BINARY)
             ret, thresh_bin = cv2.threshold(block_gray_img, minVal, maxVal, cv2.THRESH_BINARY)
-            ori_img_show = imgori.copy()
+            #ori_img_show = imgori.copy()
 
 
 
             #cv2.waitKey(0)
-
+            #在未找到起始帧之前，可以多值进行二值化
             im_with_keypoints,keypoints,myresult=detect_blob(thresh_bin)
             if our_dict.get(myresult, 0) == 0:
                 pass
             else:
                 if(our_dict[myresult]=="起始帧"):
-                    cv2.rectangle(ori_img_show, (int(i *stepsize),int(j*stepsize)),
-                              (int(i *stepsize + half_windowSize*8), int(j*stepsize + half_windowSize*6)),
-                              (0, 0, 255),
-                              4)
+
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize),int(j*stepsize)),
+                                  (int(i *stepsize + half_windowSize*8), int(j*stepsize + half_windowSize*6)),
+                                  (0, 0, 255),
+                                  4)
                     data_block_img = gray_img[int(j * stepsize):int(j * stepsize + half_windowSize * 6),
                                      int(i * stepsize):int(i * stepsize + half_windowSize * 8)]
                     user_name,user_time=decode_data_block(data_block_img)
                     user_list.append(user_name)
                     time_list.append(user_time)
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+                    cv2.imshow("image", block_gray_img)
+                    cv2.imshow("original_image", ori_img_show)
+                    print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                    cv2.imshow("THRESH_BINARY", data_block_img)
+                    cv2.waitKey(0)
                 if (our_dict[myresult] == "中继帧"):
-                    cv2.rectangle(ori_img_show, (int(i *stepsize- half_windowSize*4),int(j*stepsize-  half_windowSize*2)),
-                              (int(i *stepsize + half_windowSize*4),int( j*stepsize + half_windowSize*4)),
-                              (0, 0, 255),
-                              4)
+
+                    if bshow_debug_window is True:
+                        cv2.rectangle(ori_img_show, (int(i *stepsize- half_windowSize*4),int(j*stepsize-  half_windowSize*2)),
+                                  (int(i *stepsize + half_windowSize*4),int( j*stepsize + half_windowSize*4)),
+                                  (0, 0, 255),
+                                  4)
+                    #这晨如果检测错误，会取出异常区
                     data_block_img = gray_img[int(j * stepsize-  half_windowSize*2):int(j * stepsize + half_windowSize * 4),
                                      int(i * stepsize- half_windowSize*4):int(i * stepsize + half_windowSize * 4)]
                     user_name, user_time = decode_data_block(data_block_img)
@@ -288,11 +307,13 @@ def generate_date(img ):
                     time_list.append(user_time)
                     # b_exit=True
                     # break
-                    #cv2.imshow("image", block_gray_img)
-                    #cv2.imshow("original_image", ori_img_show)
-                    #print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
-                    #cv2.imshow("THRESH_BINARY", data_block_img)
-                    #cv2.waitKey(0)
+
+                    if bshow_debug_window is True:
+                        cv2.imshow("image", block_gray_img)
+                        cv2.imshow("original_image", ori_img_show)
+                        print("坐标",(i*stepsize , j *stepsize),myresult, "=>", hex(myresult), "定义值=>", our_dict[myresult] ,"block",data_block_img.shape)
+                        cv2.imshow("THRESH_BINARY", data_block_img)
+                        cv2.waitKey(0)
                     pass
             #result.append(myresult)
     #print(user_list,time_list)
@@ -308,7 +329,11 @@ def generate_date(img ):
         result["username"] = '??????'
         result["result_usertime"] = 0
         result["usertime"] = [None,None,None]
-        print(result)
+
+        end_time = time()
+        run_time = end_time - begin_time
+        result["reason"] = "final_user_name_list =NULL"
+        result["timecost"] = '%.1f' % run_time  # 该循环程序运行时间： 1.4201874732
         return result
     else:
         for i in range(0,6):
@@ -340,10 +365,15 @@ def generate_date(img ):
         final_str_time = decodetime(final_user_time_list)
     result["usertime"] = final_str_time
 
+    result["reason"] = ""
+    end_time = time()
+    run_time = end_time - begin_time
+    result["timecost"]= '%.1f'%run_time   # 该循环程序运行时间： 1.4201874732
     #final_str_usertime = ' '.join(str(i) for i in final_user_name_list)
     print(result)
 
     return result
+
 def max_count(lt):
     # 定义一个字典，用于存放元素及出现的次数
     d = {}
@@ -498,7 +528,8 @@ def main(args):
 
     begin_time = time()
 
-    generate_date(cv2.imread(checkpath + '/1080-1.jpg', cv2.IMREAD_GRAYSCALE))
+    ori_img_show=cv2.imread(checkpath + '/1080-3.png', cv2.IMREAD_GRAYSCALE)
+    generate_date(ori_img_show.copy())
 
     end_time = time()
     run_time = end_time - begin_time
@@ -709,9 +740,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image', type=str, help="检测单张图片，例如: python img_process_demo.py --image c:/a.jpg",
-                        default=None)
-    parser.add_argument('--images_dir', type=str, help="检测文件夹下所有图片，例如: python img_process_demo.py --images_dir c:/pic/",
+
+    parser.add_argument('--image', type=str, help="检测单张图片，例如: python img_process_demo.py --image 1x1/ori/720.png",
                         default=None)
     main_args = parser.parse_args()
     opt, unparsed = parser.parse_known_args()
