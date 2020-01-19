@@ -111,7 +111,7 @@ def detect_blob(im):
     keypoints = detector.detect(im)
 
     if(len(keypoints)==0):
-        return None,keypoints,0
+        return im,keypoints,0
    # print("detect points ",len(keypoints))
     # Draw detected blobs as red circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
@@ -740,7 +740,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
+    parser.add_argument('--images_dir', type=str, help="检测文件夹下所有图片，例如: python img_process_demo.py --images_dir c:/pic/",
+                        default=None)
     parser.add_argument('--image', type=str, help="检测单张图片，例如: python img_process_demo.py --image 1x1/ori/720.png",
                         default=None)
     main_args = parser.parse_args()

@@ -3,6 +3,7 @@ from time import *
 import cv2
 import argparse
 
+from datetime import datetime
 import os
 #导入math包
 import math
@@ -109,7 +110,7 @@ def detect_blob(im):
     keypoints = detector.detect(im)
 
     if(len(keypoints)==0):
-        return None,keypoints,0
+        return im,keypoints,0
    # print("detect points ",len(keypoints))
     # Draw detected blobs as red circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
@@ -492,25 +493,247 @@ def main(args):
         checkpath = args.image.rsplit('/', 1)[0] + "/"
         files.append(args.image.rsplit('/', 1)[1])
 
+    if (args.images_dir != None):
+        checkpath = args.images_dir
+        # checkpath = r"bugs/"
+        files = os.listdir(checkpath)
+
     #这里进行图片测试
     for imgPath in files:
         if allowed_file(imgPath) == False:
             continue
 
         my_image = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
-
+        #如果不是原图则要先进行矫正，再进行处理
         # squares, my_image = find_screen.getFinalImage(my_image)
         # os.makedirs(checkpath + "tmp", exist_ok=True)
         # cv2.imwrite(checkpath + "tmp/_" + imgPath, my_image)
         imgori = my_image.copy()
         ori_img_show = my_image.copy()
-        generate_date(my_image)
+        #generate_date(my_image)
 
+    while (1):
+        # gray_img = img.copy()# 不滤波
+        # gray_img=cv2.medianBlur(img,3) # 均值滤波
+        ori_img_show = imgori.copy()
+        #gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
+        #gray_img = img.copy()
+        img=my_image.copy()
+        cv2.imshow("image", img)
+        img_width = img.shape[1]
+        img_height = img.shape[0]
+        # half_windowSize = int(img_width / 12)
+        # print("图片大小 ",img.shape)
+
+        stepsize = 20
+        if (img_width == 1080):
+            half_windowSize = 40  #
+            stepsize = 20
+        else:  # 后期这里要根据不同图片的大小来计算
+            rate = img_width / 1080
+            half_windowSize = 40 * rate  #
+            stepsize = 20 * rate
+
+        beginX = half_windowSize
+        beginY = half_windowSize
+        #cv2.imshow("gray_img", gray_img)
+        # 获取键盘事件
+        key = cv2.waitKey()
+
+        # Esc，退出
+        if key == 27:
+            break
+        # 判断是否按下其他键
+        # if key > -1 and key != pre_flag:
+        cur_flag = key
+
+        # 响应事件
+        if cur_flag == ord('n'):
+            image_inedex = image_inedex + 1
+            if image_inedex == len(files):
+                image_inedex = 0
+            imgPath = files[image_inedex]
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            imgori = cv2.imread(checkpath + imgPath)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+            print("change file to ", imgPath)
+
+
+
+        if cur_flag == ord('c'):
+            beginX = beginX + 1
+            if beginX >= img_width:
+                beginX = img_width - half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+            # if cur_flag == ord('x') and key != pre_flag :
+        if cur_flag == ord('x'):
+            # if  pre_flag == -1:
+            beginY = beginY + 1
+            if beginY >= img_height:
+                beginY = img_height - half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord('z'):
+            beginX = beginX - 1
+            if (beginX - half_windowSize < 0):
+                beginX = half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord('s'):
+            beginY = beginY - 1
+            if (beginY - half_windowSize < 0):
+                beginY = half_windowSize
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord(' '):
+
+            img = cv2.imread(checkpath + imgPath, cv2.IMREAD_GRAYSCALE)
+            img = img[beginY - half_windowSize:beginY + half_windowSize,
+                  beginX - half_windowSize:beginX + half_windowSize]
+
+        if cur_flag == ord('v'):
+            now  =datetime.now()  # 格式为 datetime.datetime
+            now_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')# 格式为 str
+
+            cv2.imwrite("./blob_img/blob"+now_time+".png", zoom)
+            print("save ","./blob_img/blob"+now_time+".png")
+
+        #gray_img = cv2.GaussianBlur(img, (3, 3), 0)  # 高斯滤波
+
+        # 灰度拉伸
+        #hist_full = cv2.calcHist([gray_img], [0], None, [256], [0, 256])
+        gray_img = img.copy()
+        #lines = hist_lines(gray_img)
+        #cv2.imshow('gray_hist_ori', lines)
+
+        # plt.plot(hist_full)
+        # plt.show()
+        # Imax = np.max(gray_img)
+        # Imin = np.min(gray_img)
+        # MAX = 255
+        # MIN = 0
+        #gray_img_ext = (gray_img - Imin) / (Imax - Imin) * (MAX - MIN) + MIN
+        #gray_img_ext = cv2.equalizeHist(gray_img)
+
+        #lines = hist_lines(gray_img_ext.astype("uint8"))
+        #cv2.imshow('gray_hist_ext', lines)
+
+        #gray_img=gray_img_ext.astype("uint8").copy()
+        #hist_full = cv2.calcHist([gray_img], [0], None, [256], [0, 256])
+        #cv2.imshow("gray_hist_ext",hist_full)
+        # plt.plot(hist_full)
+        # plt.show()
+
+        maxVal = cv2.getTrackbarPos('max', 'res')
+        minVal = cv2.getTrackbarPos('min', 'res')
+        areaVal = cv2.getTrackbarPos('area', 'res')
+        ret, thresh_bin = cv2.threshold(gray_img, minVal, maxVal, cv2.THRESH_BINARY)
+        # ret, thresh2 = cv2.threshold(gray_img,minVal,maxVal, cv2.THRESH_BINARY_INV)
+        # ret, thresh3 = cv2.threshold(gray_img,minVal,maxVal, cv2.THRESH_TRUNC)
+        # ret, thresh4 = cv2.threshold(gray_img,minVal,maxVal, cv2.THRESH_TOZERO)
+        # ret, thresh5 = cv2.threshold(gray_img,minVal,maxVal, cv2.THRESH_TOZERO_INV)
+        ret, thresh_THRESH_OTSU = cv2.threshold(gray_img, minVal, maxVal, cv2.THRESH_OTSU | cv2.THRESH_BINARY)
+        if (areaVal % 2 == 0):
+            areaVal = areaVal - 1
+        if (areaVal <= 3):
+            areaVal = 3
+        # MEAN_C_adaptive = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+        #                                         cv2.THRESH_BINARY, areaVal, 2)
+        # MEAN_C_adaptive = cv2.medianBlur(MEAN_C_adaptive, 5)
+
+        GAUSSIAN_C_adaptive = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
+                                                    cv2.THRESH_BINARY, areaVal, 2)
+
+        GAUSSIAN_C_Blur = cv2.medianBlur(GAUSSIAN_C_adaptive, 3)  # 高斯滤波
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        GAUSSIAN_C_Blur = cv2.dilate(GAUSSIAN_C_Blur, kernel, iterations=1)
+
+
+        # Setup SimpleBlobDetector parameters.
+        #img_result, keypoints,myresult = detect_blob(thresh_THRESH_OTSU)
+        #img_result, keypoints,myresult = detect_blob(thresh1)
+        img_result, keypoints, myresult = detect_blob(thresh_bin)
+        # print("save image ")
+        # cv2.imwrite("result.png",img_result)
+
+        crossPoints = []
+        for i in range(1, 4):
+            cv2.line(img_result, pt1=(round(i * half_windowSize * 2 / 4), 0),
+                     pt2=(round(i * half_windowSize * 2 / 4), half_windowSize * 2), color=(255, 0, 0))
+            cv2.line(img_result, pt1=(0, round(i * half_windowSize * 2 / 4)),
+                     pt2=(half_windowSize * 2, round(i * half_windowSize * 2 / 4)), color=(255, 0, 0))
+        for i in range(1, 4):
+            for j in range(1, 4):
+                crossPoints.append((round(i * half_windowSize * 2 / 4), round(j * half_windowSize * 2 / 4)))
+
+                # cv2.circle(img_result, (round(i*half_windowSize*2/5),round(j*half_windowSize*2/5)) ,
+                #               4,(0, 255, 0))
+
+        array = [[0, 0, 0 ], [0, 0, 0 ], [0, 0, 0 ] ]
+        # for pt in keypoints:
+        totalDis=0
+        for i in range(len(keypoints)):
+            for j in range(len(crossPoints)):
+                # 获取两点之间直线的长度
+                l = distance(keypoints[i].pt, crossPoints[j])
+                if l < half_windowSize / DISTANCE_LIMIT:
+                    row = int(j / 3)
+                    col = j % 3
+                    array[col][row] = 1
+                    cv2.circle(img_result, crossPoints[j], 2, (0, 255, 0), thickness=-1)
+                    totalDis+=l
+
+        #print(array)
+        myresult =toInt(array)
+        if our_dict.get(myresult, 0) == 0:
+            pass
+        else:
+            print((beginX,beginY),thresh_bin.shape,myresult, "=>",hex(myresult),"定义值=>",our_dict[myresult],"距离",'%.2f'%totalDis)
+
+
+        cv2.imshow('res', img_result)
+        cv2.imshow('THRESH_BINARY', thresh_bin)
+        # cv2.imshow('THRESH_BINARY_INV', thresh2)
+        # cv2.imshow('THRESH_TRUNC', thresh3)
+        # cv2.imshow('THRESH_TOZERO', thresh4)
+        # cv2.imshow('THRESH_TOZERO_INV', thresh5)
+        cv2.imshow('THRESH_OTSU', thresh_THRESH_OTSU)
+        #cv2.imshow('GAUSSIAN_C_adaptive', GAUSSIAN_C_adaptive)
+        #cv2.imshow('GAUSSIAN_C_Blur', GAUSSIAN_C_Blur)
+
+        ori_img_show = imgori.copy()
+
+        cv2.rectangle(ori_img_show, (beginX - half_windowSize, beginY - half_windowSize),
+                      (beginX + half_windowSize, beginY + half_windowSize),
+                      (0, 0, 255),
+                      4)
+
+        cv2.imshow("original_image", ori_img_show)
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', type=str, help="检测单张图片，例如: python img_process_demo.py --image 1x1/ori/720.png",
+                        default=None)
+    parser.add_argument('--images_dir', type=str, help="检测文件夹下所有图片，例如: python img_process_demo.py --images_dir c:/pic/",
                         default=None)
     main_args = parser.parse_args()
     opt, unparsed = parser.parse_known_args()
