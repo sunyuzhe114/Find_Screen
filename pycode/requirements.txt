@@ -46,7 +46,7 @@ pypinyin==0.35.4
 pytesseract==0.3.0
 python-dateutil==2.8.0
 pytz==2019.3
-PyYAML==5.1.2
+PyYAML==5.4
 query-string==2019.4.13
 request==2019.4.13
 requests==2.22.0
