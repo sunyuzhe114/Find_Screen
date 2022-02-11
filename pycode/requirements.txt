@@ -37,7 +37,7 @@ opencv-python==4.1.1.26
 pandas==0.25.3
 Pillow==6.2.1
 post==2019.4.13
-protobuf==3.9.1
+protobuf==3.15.0
 public==2019.4.13
 pycparser==2.19
 pycpd==1.0.5
